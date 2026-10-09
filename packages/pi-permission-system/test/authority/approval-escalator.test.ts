@@ -10,21 +10,38 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { BashProgram } from "#src/access-intent/bash/program";
 import { ParentAuthorizer } from "#src/authority/approval-escalator";
+import { ForwardedRequestServer } from "#src/authority/forwarded-request-server";
 import {
   type ForwardedPermissionRequest,
   PERMISSION_FORWARDING_SERVING_GRACE_MS,
   SUBAGENT_ENV_HINT_KEYS,
 } from "#src/authority/permission-forwarding";
 import { ServingSessionRegistry } from "#src/authority/serving-registry";
+import { describeBashExternalDirectoryGate } from "#src/handlers/gates/bash-external-directory";
+import { describeBashPathGate } from "#src/handlers/gates/bash-path";
+import { posixPathFlavor } from "#src/path/path-flavor";
+import { PathNormalizer } from "#src/path/path-normalizer";
+import { PermissionResolver } from "#src/policy/permission-resolver";
+import { ResolverServingPolicy } from "#src/policy/serving-policy";
+import { SessionRules } from "#src/session/session-rules";
 import {
   createForwardingTempDir,
   makeForwarderContext,
   makeLivenessJudge,
   makeParentAuthorizerDeps,
+  makeServerDeps,
   makeSubagentRegistry,
   publishServingHeartbeat,
 } from "#test/helpers/forwarding-fixtures";
+import {
+  makeDescriptor,
+  makeGateRunner,
+  makeTcc,
+} from "#test/helpers/gate-fixtures";
+import { makeCheckResult } from "#test/helpers/handler-fixtures";
+import { createManagerWithConfig } from "#test/helpers/manager-harness";
 import {
   makePromptDetails,
   makePromptPayload,
@@ -80,6 +97,7 @@ async function waitForRequestFile(
 async function exchangeWith(
   temp: ReturnType<typeof createForwardingTempDir>,
   response: Record<string, unknown>,
+  details = makePromptDetails({ requestId: "perm-child-request" }),
 ) {
   const authorizer = new ParentAuthorizer(
     makeForwarderContext({ hasUI: false, sessionId: "child-session" }),
@@ -90,9 +108,7 @@ async function exchangeWith(
       }),
     }),
   );
-  const decisionPromise = authorizer.authorize(
-    makePromptDetails({ requestId: "perm-child-request" }),
-  );
+  const decisionPromise = authorizer.authorize(details);
   const request = await waitForRequestFile(temp.location.requestsDir);
   writeFileSync(
     join(temp.location.responsesDir, `${request.id}.json`),
@@ -103,6 +119,204 @@ async function exchangeWith(
 }
 
 describe("ParentAuthorizer provenance relay", () => {
+  test.each([
+    ["external_directory_read", false],
+    ["path_read", false],
+    ["external_directory_read", true],
+    ["path_read", true],
+  ] as const)(
+    "keeps a parent's deny on the second %s path authoritative (combined gates: %s)",
+    async (surface, combined) => {
+      const temp = createForwardingTempDir("parent-session");
+      const child = createManagerWithConfig({
+        "*": "allow",
+        [surface]: { "*": "ask" },
+      });
+      const parent = createManagerWithConfig({
+        "*": "allow",
+        [surface]: { "*": "allow", "/probe-denied/*": "deny" },
+      });
+      try {
+        const normalizer = new PathNormalizer(posixPathFlavor, "/project");
+        const command = "cat /probe-first/a /probe-denied/b";
+        const program = await BashProgram.parse(command, normalizer);
+        const childResolver = new PermissionResolver(
+          child.manager,
+          new SessionRules(),
+        );
+        const gate = (
+          surface === "path_read"
+            ? describeBashPathGate
+            : describeBashExternalDirectoryGate
+        )(
+          makeTcc({ cwd: "/project", input: { command } }),
+          program,
+          childResolver,
+          normalizer,
+        );
+        const authorizer = new ParentAuthorizer(
+          makeForwarderContext({ hasUI: false, sessionId: "child-session" }),
+          makeParentAuthorizerDeps({
+            forwardingDir: temp.forwardingDir,
+            registry: makeSubagentRegistry("child-session", {
+              parentSessionId: "parent-session",
+            }),
+          }),
+        );
+        const { runner } = makeGateRunner({
+          escalate: (details) => authorizer.authorize(details),
+        });
+        const gates = [gate];
+        if (combined)
+          gates.push(
+            makeDescriptor({
+              surface: "bash",
+              preCheck: makeCheckResult({ state: "ask" }),
+              promptDetails: {
+                source: "tool_call",
+                agentName: null,
+                accessIntent: {
+                  surface: "bash",
+                  matchValues: [command],
+                  boundaryValue: null,
+                },
+              },
+            }),
+          );
+        const pending = runner.runAll(gates, null);
+        const request = await waitForRequestFile(temp.location.requestsDir);
+        const escalate = vi.fn().mockResolvedValue({
+          approved: true,
+          state: "approved",
+          decidedBy: { kind: "user", via: "dialog" },
+        });
+        const policy = new ResolverServingPolicy(
+          new PermissionResolver(parent.manager, new SessionRules()),
+          () => false,
+        );
+        const server = new ForwardedRequestServer(
+          makeServerDeps({
+            forwardingDir: temp.forwardingDir,
+            policy,
+            escalator: { escalate },
+          }),
+        );
+        await server.processInbox(
+          makeForwarderContext({ hasUI: true, sessionId: "parent-session" }),
+        );
+        expect(await pending).toMatchObject({ action: "block" });
+        expect(escalate).not.toHaveBeenCalled();
+        expect(
+          request.requirements
+            ?.map((entry) => entry?.boundaryValue)
+            .filter(Boolean),
+        ).toEqual(["/probe-first/a", "/probe-denied/b"]);
+      } finally {
+        child.cleanup();
+        parent.cleanup();
+        temp.cleanup();
+      }
+    },
+  );
+  test("round-trips one compound ask through the real forwarding files", async () => {
+    const temp = createForwardingTempDir("parent-session");
+    try {
+      const authorizer = new ParentAuthorizer(
+        makeForwarderContext({ hasUI: false, sessionId: "child-session" }),
+        makeParentAuthorizerDeps({
+          forwardingDir: temp.forwardingDir,
+          registry: makeSubagentRegistry("child-session", {
+            parentSessionId: "parent-session",
+          }),
+        }),
+      );
+      const requirements = [
+        {
+          surface: "bash",
+          matchValues: ["cat /outside/file"],
+          boundaryValue: null,
+          floor: "<unproven-readonly-bash-command>",
+        },
+        {
+          surface: "external_directory_read",
+          matchValues: ["/outside/file"],
+          boundaryValue: "/outside/file",
+        },
+      ];
+      const sessionApproval = {
+        grants: requirements.map((requirement) => ({
+          surface: requirement.surface,
+          pattern: requirement.matchValues[0],
+        })),
+      };
+      const pending = authorizer.authorize(
+        makePromptDetails({ requirements, sessionApproval }),
+      );
+      const request = await waitForRequestFile(temp.location.requestsDir);
+      expect(request.accessIntent).toBeUndefined();
+      expect(request.sessionApproval).toBeUndefined();
+      expect(request.compoundSessionApproval).toEqual(sessionApproval);
+      expect(request.requirements).toHaveLength(2);
+      const escalate = vi.fn().mockResolvedValue({
+        approved: true,
+        state: "approved",
+        decidedBy: { kind: "user", via: "dialog" },
+      });
+      const resolve = vi.fn(() => makeCheckResult({ state: "ask" }));
+      const server = new ForwardedRequestServer(
+        makeServerDeps({
+          forwardingDir: temp.forwardingDir,
+          policy: { resolve },
+          escalator: { escalate },
+        }),
+      );
+      await server.processInbox(
+        makeForwarderContext({ hasUI: true, sessionId: "parent-session" }),
+      );
+      expect(await pending).toMatchObject({ approved: true });
+      expect(resolve).toHaveBeenCalledTimes(2);
+      expect(escalate).toHaveBeenCalledTimes(1);
+      expect(escalate).toHaveBeenCalledWith(
+        expect.objectContaining({ requirements, sessionApproval }),
+      );
+    } finally {
+      temp.cleanup();
+    }
+  });
+  test.each([false, true])(
+    "requires explicit compound acknowledgement: %s",
+    async (acknowledged) => {
+      const temp = createForwardingTempDir("parent-session");
+      try {
+        const decision = await exchangeWith(
+          temp,
+          {
+            approved: true,
+            state: "approved",
+            responderSessionId: "parent-session",
+            ...(acknowledged ? { requirementsEvaluated: true } : {}),
+          },
+          makePromptDetails({
+            requirements: [
+              {
+                surface: "bash",
+                matchValues: ["cat file"],
+                boundaryValue: null,
+              },
+              {
+                surface: "external_directory_read",
+                matchValues: ["/outside/file"],
+                boundaryValue: "/outside/file",
+              },
+            ],
+          }),
+        );
+        expect(decision.approved).toBe(acknowledged);
+      } finally {
+        temp.cleanup();
+      }
+    },
+  );
   test("nests the responder's own decider under the forwarding hop", async () => {
     const temp = createForwardingTempDir("parent-session");
     try {

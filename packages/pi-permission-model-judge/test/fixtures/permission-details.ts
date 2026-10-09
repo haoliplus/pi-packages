@@ -1,7 +1,7 @@
 import type {
   PromptPayload,
   PromptPermissionDetails,
-} from "@gotgenes/pi-permission-system";
+} from "@haoliplus/pi-permission-system";
 
 /**
  * The ask facts a chain link is handed at `authorize` time.
@@ -32,6 +32,7 @@ const EXTERNAL_DIRECTORY_PAYLOAD: PromptPayload = {
     invokedToolName: null,
     value: "",
     matchedPattern: null,
+    matchedSpelling: null,
     commandContext: null,
     executedUnit: null,
   },

@@ -52,7 +52,7 @@ This clamp is deny-preserving and, like `yoloMode`, applied at composition; when
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
+  "$schema": "https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
 
   // Runtime knobs
   "debugLog": false,
@@ -341,7 +341,7 @@ Three review-log records make the chain observable, all keyed by the ask's `requ
 Extension authors: register a link from a `permissions:ready` handler via `getPermissionsService(sessionId).registerAuthorizer(name, authorize)`, taking `sessionId` from that event's payload; the callback receives the ask details and a narrow, session-scoped `PermissionQuery` (`checkPermission` / `getToolPermission`) so it can consult the deterministic engine at gate parity.
 Registration returns a disposer, and only one link may hold a given name.
 Register in every session without branching: a session that relays its asks accepts the link and records `authorizer_link_vacant` rather than refusing it.
-For a complete working example, see [`@gotgenes/pi-permission-model-judge`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-model-judge): it registers a `model-judge` link on `permissions:ready` that reviews `external_directory` asks and auto-denies mistyped paths with a corrective reason.
+For a complete working example, see [`@haoliplus/pi-permission-model-judge`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-model-judge): it registers a `model-judge` link on `permissions:ready` that reviews `external_directory` asks and auto-denies mistyped paths with a corrective reason.
 
 ---
 
@@ -870,7 +870,7 @@ What the bash projection resolves:
 What it deliberately does not resolve: any other variable (`$CONFIG_DIR`), a command substitution (`$(cmd)`), an expansion carrying an operator (`${HOME:-/tmp}`), a variable reached through an assignment (`CURRENT="$HOME"; ls "$CURRENT"`), and `$HOME`, `$PWD`, or a leading `~` in a command that reassigns the variable anywhere (`HOME=/etc; cat "$HOME/shadow"`), including through `read`, `unset`, `eval`, or `source`.
 A non-literal `cd` (`cd "$DIR"`) makes the working directory unknown, after which relative tokens are kept literal rather than resolved against a guess.
 Commands whose payload is opaque (`bash -c`, `eval`, `sudo`, `xargs`) are floored to `ask` instead of projected.
-The governing record is [ADR 0009](https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0009-bash-path-projection-completeness-contract.md), which states what the projection guarantees and which gaps are accepted residuals rather than bugs.
+The governing record is [ADR 0009](https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0009-bash-path-projection-completeness-contract.md), which states what the projection guarantees and which gaps are accepted residuals rather than bugs.
 
 (The separate `bash` command-pattern surface does evaluate commands nested inside substitutions and subshells; see that section.) OS device paths (`/dev/null`, `/dev/stdin`, `/dev/stdout`, `/dev/stderr`) are always excluded.
 
@@ -1004,7 +1004,8 @@ When the same path is reached twice with disagreeing directions (`cat a.txt > a.
 
 #### The pure-reader command core
 
-A small, frozen set of command words is read-only for any arguments, in any implementation.
+A small, audited set of command words can prove read access when their argument guards permit it.
+This fork also raises uncertain reader invocations to ask at command level, including computed paths and unsafe reader options; see the [fork read-only guide](guides/fork-readonly-policy.md).
 A path token owned by one of them consults the `_read` surface alone:
 
 <!-- BEGIN PURE_READER_CORE -->
@@ -1470,7 +1471,7 @@ Additional behaviors:
   Tool filtering and enforcement still apply, and the model still receives only the allowed tools in the request's tool list.
   A subagent child is the exception: its prompt is always a custom one assembled by the subagent extension, so it gets its own `<tools>` and `<rules>` sections, placed after the working directory, while any custom text it inherited stays untouched.
   The child's sections follow pi's own rules: a tool is listed only when pi supplied a one-line description for it, and the guideline bullets are the allowed tools' own contributions, then any rules another extension added to `systemPromptOptions.promptGuidelines`, around pi's built-in ones.
-- A subagent child running with `@gotgenes/pi-subagents` needs a release that drops the parent's `<tools>` and `<rules>` from the prompt the child inherits; with an older one, the child shows the parent's tool list as well as its own.
+- A subagent child running with `@haoliplus/pi-subagents` needs a release that drops the parent's `<tools>` and `<rules>` from the prompt the child inherits; with an older one, the child shows the parent's tool list as well as its own.
 - A denied skill is removed from the skills catalogue pi renders.
   A skill listed in text pi did not render, such as your own `SYSTEM.md`, is not edited out; using it is still gated.
 - The prompt options are recomputed on every turn but are stable across turns for a stable policy/agent, so the provider's prompt cache is preserved rather than rewritten each turn.
@@ -1479,7 +1480,7 @@ Additional behaviors:
 - Generic extension-tool approval prompts include a bounded input preview; built-in file tools use concise human-readable summaries
 - Permission review logs include `toolInputPreview` values for tool calls other than bash and the `mcp` proxy, with sensitive-keyed values masked and every value bounded by `reviewLogFieldMaxWidth` (see [Log file sensitivity](#log-file-sensitivity))
 - A tool whose path came from an extractor registered in an **ancestor** session rather than this one records `extractorSource: "inherited"` beside the decision; the field is absent for every path this session resolved itself.
-  This happens in a subagent child when the extractor's provider was kept out of the child but the tool's own package was not — the child borrows the declaration so its `path` and `external_directory` gates still see the path (see [Subagent Integration](https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/subagent-integration.md#loading-asymmetry))
+  This happens in a subagent child when the extractor's provider was kept out of the child but the tool's own package was not — the child borrows the declaration so its `path` and `external_directory` gates still see the path (see [Subagent Integration](https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/subagent-integration.md#loading-asymmetry))
 
 ---
 
@@ -1535,7 +1536,7 @@ Practical guidance:
 - Set `"permissionReviewLog": false` (and leave `debugLog` off) for a session that will handle credentials on the command line.
 - Owner-only modes do not protect against anything running as you, including a backup or cloud-sync agent that copies your home directory.
 
-[ADR 0010]: https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0010-permission-log-secret-exposure.md
+[ADR 0010]: https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0010-permission-log-secret-exposure.md
 
 ---
 
@@ -1552,7 +1553,7 @@ npx --yes ajv-cli@5 validate \
 **Editor tip:** Add the hosted schema URL as the `$schema` key in your config for autocomplete and validation support:
 
 ```json
-"$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json"
+"$schema": "https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json"
 ```
 
 The well-known surface keys — `*`, `path`, `external_directory`, `bash`, `mcp`, `skill`, and the four directional keys — are named properties in the schema, so an editor completes them and shows each key's own documentation on hover; any other registered tool name still validates as a surface.

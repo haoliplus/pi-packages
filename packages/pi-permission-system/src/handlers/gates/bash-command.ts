@@ -180,13 +180,41 @@ function resolveCommandUnit(
     cmd.wrapperKind && base.state === "allow" && !isSessionGrant(base)
       ? resolveWrapperUnit(cmd, cmd.wrapperKind, base, agentName, resolver)
       : base;
-  const unparsed = floorUnparsedUnit(cmd, command, floored);
+  const readonly = floorUnprovenReader(cmd, floored, agentName, resolver);
+  const unparsed = floorUnparsedUnit(cmd, command, readonly);
   const contextual = cmd.context
     ? { ...unparsed, commandContext: cmd.context }
     : unparsed;
   return cmd.executedUnit === undefined
     ? contextual
     : { ...contextual, executedUnit: cmd.executedUnit };
+}
+
+/**
+ * Path attribution alone cannot guard a script with no path operands, or an
+ * operand whose value is unknown. Keep that uncertainty on its command unit.
+ * Environment prefixes belong to the approval scope, although command rules
+ * still see the underlying executable so a prefix cannot hide a deny.
+ */
+function floorUnprovenReader(
+  cmd: BashCommand,
+  resolved: PermissionCheckResult,
+  agentName: string | undefined,
+  resolver: ScopedPermissionResolver,
+): PermissionCheckResult {
+  if (cmd.unprovenRead === undefined || resolved.state === "deny")
+    return resolved;
+  const complete =
+    cmd.unprovenRead === cmd.text
+      ? resolved
+      : resolveOnBashSurface(cmd.unprovenRead, [], agentName, resolver);
+  if (complete.state === "deny") return complete;
+  if (isSessionGrant(complete)) return complete;
+  return {
+    ...floorToAsk(resolved, "<unproven-readonly-bash-command>"),
+    source: complete.source,
+    command: cmd.unprovenRead,
+  };
 }
 
 /**

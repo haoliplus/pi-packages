@@ -151,6 +151,20 @@ function makeAsk(value = "/repo/secret.txt"): PromptPayload {
 
 const ASK = makeAsk();
 
+it("shows every requirement in one interactive decision", async () => {
+  const { view, captured } = makeFakeView(false);
+  const decision = requestPermissionDecision(view, "Permission Required", {
+    ...ASK,
+    requirements: [makeAsk("/repo/config.json"), makeAsk("/outside/notes.txt")],
+  });
+  const rendered = captured.component?.render(100).join("\n");
+  expect(rendered).toContain("/repo/config.json");
+  expect(rendered).toContain("/outside/notes.txt");
+  expect(rendered).toContain("Approve all listed permissions");
+  captured.component?.handleInput("y");
+  expect(await decision).toMatchObject({ approved: true });
+});
+
 /** Title, blank separator, four decision options, blank, hint. */
 const DECISION_CHROME_ROWS = 8;
 

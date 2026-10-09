@@ -30,6 +30,9 @@ export function renderReviewLogFacts(
     ...present("commandContext", request.commandContext),
     ...present("invokedToolName", request.invokedToolName),
     ...forwardingFacts(payload),
+    ...(payload.requirements
+      ? { requirements: payload.requirements.map(renderReviewLogFacts) }
+      : {}),
   };
 }
 

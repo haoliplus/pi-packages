@@ -181,7 +181,7 @@ describe("schemaRepoPath", () => {
   it("returns the repo-relative path a canonical raw URL names", () => {
     expect(
       schemaRepoPath(
-        "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
+        "https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
       ),
     ).toBe("packages/pi-permission-system/schemas/permissions.schema.json");
   });

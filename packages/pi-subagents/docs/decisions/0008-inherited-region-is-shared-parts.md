@@ -22,7 +22,7 @@ What this record changes is the *goal* that placement serves, and the claim the 
 
 ### The tool list sits inside the region
 
-`@gotgenes/pi-permission-system` narrows a session's `Available tools:` listing to the tools policy allows.
+`@haoliplus/pi-permission-system` narrows a session's `Available tools:` listing to the tools policy allows.
 That listing is at offset 171 of Pi's preamble — inside the identity.
 Rewriting it in place ended the shared prefix there for every child whose allowed set differed from its parent's: measured at **365 shared characters of a 57,423-character identity** in this repo's configuration, and reported from the field as a divergence at offset 412 of a 22,157-character prompt ([#890]).
 
@@ -34,7 +34,7 @@ A shared identity and an honest per-session tool list cannot coexist while the l
 Anthropic builds its cache prefix in the order `tools`, `system`, `messages`, and modifying tool definitions "invalidates the entire cache".
 The `tools` array precedes the system prompt, so **any** child whose tool array differs from its parent's gets no cache hit from a byte-identical system prompt — which is every child with a narrowed `tools:` list, and every child at all, since the core installs `ask_parent`/`notify_parent` that no parent has.
 
-On the Anthropic OAuth path there is a second, independent break: `@gotgenes/pi-anthropic-auth` prepends a billing block as system block 0 whose hash is derived from the first user message, and a parent and child never share one.
+On the Anthropic OAuth path there is a second, independent break: `@haoliplus/pi-anthropic-auth` prepends a billing block as system block 0 whose hash is derived from the first user message, and a parent and child never share one.
 
 The property pays where tool definitions are rendered *after* the system text — local inference engines whose chat template does so, which is [#180]'s own constituency, and API-key Anthropic with an identical tool array.
 The package had never said so.
@@ -81,4 +81,4 @@ It sat after the identity, so removing it costs no prefix.
 [ADR 0006]: 0006-inherited-prompt-is-identity-only.md
 [ADR 0009]: 0009-portable-inheritance-is-provider-scoped.md
 [ADR 0011]: 0011-tool-surface-sections-are-session-resolved.md
-[its ADR 0014]: https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0014-tool-surface-is-node-local-prose.md
+[its ADR 0014]: https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0014-tool-surface-is-node-local-prose.md

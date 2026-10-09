@@ -541,8 +541,23 @@ export function readForwardedPermissionRequest(
       source: asUiPromptSource(parsed.source),
       surface: asNullableDisplayString(parsed.surface),
       value: asNullableDisplayString(parsed.value),
-      sessionApproval: asForwardedSessionApproval(parsed.sessionApproval),
+      sessionApproval: asForwardedSessionApproval(
+        parsed.requirements === undefined
+          ? parsed.sessionApproval
+          : parsed.compoundSessionApproval,
+      ),
       accessIntent: asForwardedAccessIntent(parsed.accessIntent),
+      ...(parsed.requirements === undefined
+        ? {}
+        : {
+            requirements:
+              Array.isArray(parsed.requirements) &&
+              parsed.requirements.length > 0
+                ? parsed.requirements.map(
+                    (entry: unknown) => asForwardedAccessIntent(entry) ?? null,
+                  )
+                : [null],
+          }),
     };
   } catch (error) {
     logPermissionForwardingWarning(
@@ -577,6 +592,7 @@ export function readForwardedPermissionResponse(
 
     return {
       approved: parsed.approved,
+      requirementsEvaluated: parsed.requirementsEvaluated === true,
       state: parsed.state,
       denialReason:
         typeof parsed.denialReason === "string"

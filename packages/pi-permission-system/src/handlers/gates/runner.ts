@@ -17,20 +17,24 @@ import type {
   GateDescriptor,
   GateResult,
 } from "./descriptor";
-import { isGateBypass, preResolvedCheckOf } from "./descriptor";
+import {
+  isGateBypass,
+  isGateDescriptor,
+  orderDenyFirst,
+  preResolvedCheckOf,
+} from "./descriptor";
 import { buildDecisionEvent, resolveYoloGrant } from "./helpers";
 import type { GateOutcome } from "./types";
 
 // ── GateRunner class ───────────────────────────────────────────────────────
 
 /**
- * Executes permission gate checks for a single gate result (null, bypass, or
- * descriptor).
+ * Executes permission gates with their individual logs, decisions and grants.
  *
  * Constructed once per handler with its four role collaborators and reused
- * for every gate in a tool-call pipeline. The `run` method absorbs the null /
- * bypass / descriptor dispatch that previously lived as an anonymous closure
- * in `PermissionGateHandler.handleToolCall`.
+ * for every tool-call pipeline. `runAll` presents all asking gates together,
+ * preserving nested path requirements; `run` supports independent skill gates
+ * and the same null / bypass / descriptor dispatch.
  */
 export class GateRunner {
   constructor(
@@ -44,6 +48,79 @@ export class GateRunner {
      */
     private readonly isYoloEnabled: () => boolean,
   ) {}
+
+  /** Resolve the entire call before asking, then disclose every asking gate. */
+  async runAll(
+    gates: GateResult[],
+    agentName: string | null,
+  ): Promise<GateOutcome> {
+    const resolved: GateResult[] = gates.map((gate) =>
+      isGateDescriptor(gate)
+        ? {
+            ...gate,
+            preCheck:
+              preResolvedCheckOf(gate) ??
+              this.resolver.resolve({
+                kind: "tool",
+                surface: gate.surface,
+                input: gate.input,
+                agentName: agentName ?? undefined,
+              }),
+          }
+        : gate,
+    );
+    const ordered = orderDenyFirst(resolved);
+    const asking = resolved.filter(
+      (gate): gate is GateDescriptor =>
+        isGateDescriptor(gate) &&
+        gate.preCheck?.state === "ask" &&
+        !this.isYoloEnabled(),
+    );
+    let decision: Promise<PermissionPromptDecision> | undefined;
+    const escalator: AskEscalator =
+      asking.length < 2
+        ? this.prompter
+        : {
+            escalate: (details) => {
+              decision ??= this.prompter.escalate({
+                ...details,
+                surface: null,
+                accessIntent: undefined,
+                requirements: asking.flatMap(
+                  (gate) =>
+                    gate.promptDetails.requirements ?? [
+                      gate.promptDetails.accessIntent,
+                    ],
+                ),
+                payload: {
+                  ...details.payload,
+                  requirements: asking.flatMap(
+                    (gate) => gate.payload.requirements ?? [gate.payload],
+                  ),
+                },
+                sessionLabel: "Yes, all listed permissions for this session",
+                sessionApproval: {
+                  grants: asking.flatMap(
+                    (gate) => gate.sessionApproval?.grants ?? [],
+                  ),
+                },
+              });
+              return decision;
+            },
+          };
+    for (const gate of ordered) {
+      const outcome = isGateDescriptor(gate)
+        ? await this.runDescriptor(
+            gate,
+            agentName,
+            createPermissionRequestId(),
+            escalator,
+          )
+        : await this.run(gate, agentName);
+      if (outcome.action === "block") return outcome;
+    }
+    return { action: "allow" };
+  }
 
   /**
    * Execute a gate: null → allow; bypass → log/emit side effects then allow;
@@ -87,6 +164,7 @@ export class GateRunner {
     descriptor: GateDescriptor,
     agentName: string | null,
     requestId: string,
+    escalator: AskEscalator = this.prompter,
   ): Promise<GateOutcome> {
     // 1. Resolve permission state — what the descriptor already carries, or
     // via the resolver when it carries nothing.
@@ -203,7 +281,7 @@ export class GateRunner {
       state: check.state,
       canGrantForSession: descriptor.sessionApproval?.isRecordable ?? false,
       promptForApproval: async () => {
-        const decision = await this.prompter.escalate({
+        const decision = await escalator.escalate({
           requestId,
           payload,
           ...descriptor.promptDetails,

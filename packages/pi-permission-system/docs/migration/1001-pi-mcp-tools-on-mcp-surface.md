@@ -32,7 +32,7 @@ The key keeps its original meaning too, so `"mcp__*"` still covers a tool from a
 At session start you see a notice naming each such key:
 
 ```text
-Top-level permission keys naming Pi MCP tools are applied as "mcp" rules: "mcp__danger_srv__wipe". Move them under "mcp" — see https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md
+Top-level permission keys naming Pi MCP tools are applied as "mcp" rules: "mcp__danger_srv__wipe". Move them under "mcp" — see https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md
 ```
 
 To port it, move the key under `mcp` unchanged — the full Pi name is one of the tool's `mcp` targets:

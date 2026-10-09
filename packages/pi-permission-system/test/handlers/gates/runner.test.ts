@@ -13,6 +13,79 @@ import { makeDescriptor, makeGateRunner } from "#test/helpers/gate-fixtures";
 import { makeCheckResult } from "#test/helpers/handler-fixtures";
 import { makePromptPayload } from "#test/helpers/prompt-details-fixtures";
 
+describe("GateRunner — one tool call", () => {
+  it("denies the entire call without recording any grants", async () => {
+    const { runner, deps } = makeGateRunner({
+      escalate: vi.fn().mockResolvedValue({
+        approved: false,
+        state: "denied",
+        decidedBy: DECIDED_BY_HUMAN,
+      }),
+    });
+    const gates = ["bash", "path_read"].map((surface) =>
+      makeDescriptor({
+        surface,
+        preCheck: makeCheckResult({ state: "ask" }),
+        sessionApproval: SessionApproval.single(surface, "target"),
+      }),
+    );
+    expect(await runner.runAll(gates, null)).toMatchObject({ action: "block" });
+    expect(deps.escalate).toHaveBeenCalledTimes(1);
+    expect(deps.recordSessionApproval).not.toHaveBeenCalled();
+  });
+  it("asks once for all requirements and records each session grant", async () => {
+    const { runner, deps } = makeGateRunner({
+      escalate: vi.fn().mockResolvedValue({
+        approved: true,
+        state: "approved_for_session",
+        decidedBy: DECIDED_BY_HUMAN,
+      }),
+    });
+    const gates = ["bash", "external_directory_read"].map((surface) =>
+      makeDescriptor({
+        surface,
+        preCheck: makeCheckResult({ state: "ask" }),
+        sessionApproval: SessionApproval.single(surface, "target"),
+        promptDetails: {
+          source: "tool_call",
+          agentName: null,
+          accessIntent: {
+            surface,
+            matchValues: ["target"],
+            boundaryValue: null,
+          },
+        },
+      }),
+    );
+    expect(await runner.runAll(gates, null)).toEqual({ action: "allow" });
+    expect(deps.escalate).toHaveBeenCalledTimes(1);
+    expect(deps.escalate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requirements: gates.map((gate) => gate.promptDetails.accessIntent),
+      }),
+    );
+    expect(deps.recordSessionApproval).toHaveBeenCalledTimes(2);
+    expect(deps.recordSessionApproval).toHaveBeenCalledWith(
+      SessionApproval.single("bash", "target"),
+    );
+    expect(deps.recordSessionApproval).toHaveBeenCalledWith(
+      SessionApproval.single("external_directory_read", "target"),
+    );
+    expect(deps.reporter.emitDecision).toHaveBeenCalledTimes(2);
+  });
+
+  it("never asks when a later gate denies", async () => {
+    const { runner, deps } = makeGateRunner();
+    const gates = ["ask", "deny"].map((state) =>
+      makeDescriptor({
+        preCheck: makeCheckResult({ state: state as "ask" | "deny" }),
+      }),
+    );
+    expect(await runner.runAll(gates, null)).toMatchObject({ action: "block" });
+    expect(deps.escalate).not.toHaveBeenCalled();
+  });
+});
+
 // ── GateRunner — descriptor path ───────────────────────────────────────────
 
 describe("GateRunner — descriptor path", () => {

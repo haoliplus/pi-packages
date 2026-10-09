@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-permission-system",
+  "name": "@haoliplus/pi-permission-system",
   "version": "40.1.2",
   "description": "Permission enforcement extension for the Pi coding agent.",
   "type": "module",
@@ -17,6 +17,7 @@
     "src",
     "dist",
     "config/config.example.json",
+    "config/readonly.example.json",
     "schemas/permissions.schema.json",
     "docs/*.md",
     "docs/guides",
@@ -61,18 +62,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-permission-system"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system#readme",
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system#readme",
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "pi": {
     "extensions": [
@@ -98,5 +96,6 @@
     "tree-sitter-bash": "^0.25.1",
     "web-tree-sitter": "^0.26.9",
     "zod": "^4.4.3"
-  }
+  },
+  "private": true
 }

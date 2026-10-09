@@ -1,55 +1,62 @@
 # pi-packages
 
-A monorepo of [Pi](https://github.com/badlogic/pi-mono) extension packages, published to npm under `@gotgenes/`.
-Some packages (like pi-permission-system) are designed for broad use; others scratch a personal itch and are shared in case they help others.
+A personal fork of [gotgenes/pi-packages](https://github.com/gotgenes/pi-packages), maintained at [haoliplus/pi-packages](https://github.com/haoliplus/pi-packages).
+Thank you to Chris Lasher (gotgenes) and the upstream contributors for building and sharing these Pi extensions.
+The permission system also descends from [MasuRii/pi-permission-system](https://github.com/MasuRii/pi-permission-system).
+Original MIT licenses, copyright notices, and historical issue references are retained.
+
+This fork uses the `@haoliplus/*` namespace and private workspace packages; no fork packages are currently published to npm.
+Its initial focus is bounded read-only permissions and fewer repeated confirmation prompts.
+See the [permission implementation plan](packages/pi-permission-system/docs/plans/fork-readonly-permissions.md) for scope and verification.
 
 ## Packages
 
-| Package                                                                      | Description                                                    | Downloads/month                                                                                                                                |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@gotgenes/pi-permission-system](./packages/pi-permission-system/)           | Permission enforcement for the Pi coding agent                 | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-permission-system)](https://www.npmjs.com/package/@gotgenes/pi-permission-system)           |
-| [@gotgenes/pi-permission-model-judge](./packages/pi-permission-model-judge/) | Deny-first typo-path model judge for pi-permission-system      | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-permission-model-judge)](https://www.npmjs.com/package/@gotgenes/pi-permission-model-judge) |
-| [@gotgenes/pi-subagents](./packages/pi-subagents/)                           | Focused, in-process autonomous sub-agent core for Pi           | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-subagents)](https://www.npmjs.com/package/@gotgenes/pi-subagents)                           |
-| [@gotgenes/pi-github-tools](./packages/pi-github-tools/)                     | Deterministic GitHub CI, release, and issue tools              | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-github-tools)](https://www.npmjs.com/package/@gotgenes/pi-github-tools)                     |
-| [@gotgenes/pi-autoformat](./packages/pi-autoformat/)                         | Prompt-end auto-formatting (Biome, Prettier, etc.)             | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-autoformat)](https://www.npmjs.com/package/@gotgenes/pi-autoformat)                         |
-| [@gotgenes/pi-colgrep](./packages/pi-colgrep/)                               | Semantic code search via ColGrep as an agent tool              | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-colgrep)](https://www.npmjs.com/package/@gotgenes/pi-colgrep)                               |
-| [@gotgenes/pi-session-tools](./packages/pi-session-tools/)                   | Session naming and context bridge for multi-session workflows  | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-session-tools)](https://www.npmjs.com/package/@gotgenes/pi-session-tools)                   |
-| [@gotgenes/pi-subagents-worktrees](./packages/pi-subagents-worktrees/)       | Git worktree isolation WorkspaceProvider for pi-subagents      | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-subagents-worktrees)](https://www.npmjs.com/package/@gotgenes/pi-subagents-worktrees)       |
-| [@gotgenes/pi-nocd](./packages/pi-nocd/)                                     | System-prompt guard against cd-prefixing the working directory | [![npm](https://img.shields.io/npm/dm/@gotgenes/pi-nocd)](https://www.npmjs.com/package/@gotgenes/pi-nocd)                                     |
+| Package                                                                       | Description                                                                                                                                                                |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@haoliplus/pi-autoformat](./packages/pi-autoformat/)                         | Pi extension package for prompt-end auto-formatting                                                                                                                        |
+| [@haoliplus/pi-colgrep](./packages/pi-colgrep/)                               | Pi extension that integrates ColGrep semantic code search as an agent tool.                                                                                                |
+| [@haoliplus/pi-github-tools](./packages/pi-github-tools/)                     | Pi extension providing deterministic GitHub CI, release, and issue tools.                                                                                                  |
+| [@haoliplus/pi-nocd](./packages/pi-nocd/)                                     | Pi extension that injects the resolved working directory into the system prompt so the agent never cd-prefixes the current working directory                               |
+| [@haoliplus/pi-permission-model-judge](./packages/pi-permission-model-judge/) | Deny-first typo-path model judge — a pi-permission-system Authorizer chain link                                                                                            |
+| [@haoliplus/pi-permission-system](./packages/pi-permission-system/)           | Permission enforcement extension for the Pi coding agent.                                                                                                                  |
+| [@haoliplus/pi-session-tools](./packages/pi-session-tools/)                   | Pi extension providing session metadata tools (naming, context) for multi-session workflows                                                                                |
+| [@haoliplus/pi-subagents](./packages/pi-subagents/)                           | A focused, in-process sub-agent core for pi — autonomous agents plus a typed API and lifecycle events other extensions build on. Friendly fork of @tintinweb/pi-subagents. |
+| [@haoliplus/pi-subagents-worktrees](./packages/pi-subagents-worktrees/)       | Git worktree isolation for @haoliplus/pi-subagents — a WorkspaceProvider that runs subagents in isolated worktrees.                                                        |
 
 Each package has its own README with setup instructions, usage, and configuration details.
 
 ## Install
 
-Install every package in this repo at once:
+Clone the fork, install dependencies, and build its public type declarations:
 
 ```bash
-pi install git:github.com/gotgenes/pi-packages
+git clone https://github.com/haoliplus/pi-packages.git
+cd pi-packages
+pnpm install --frozen-lockfile
+pnpm run build:types
 ```
 
-Or install a single package via npm:
+Install only the package you need from its absolute local path:
 
 ```bash
-pi install npm:@gotgenes/<package-name>
+pi install /absolute/path/to/pi-packages/packages/pi-permission-system
 ```
 
 ## Uninstall
 
-If installed via git:
+Remove the same local source:
 
 ```bash
-pi remove git:github.com/gotgenes/pi-packages
+pi remove /absolute/path/to/pi-packages/packages/pi-permission-system
 ```
 
-If installed individually via npm:
-
-```bash
-pi remove npm:@gotgenes/<package-name>
-```
+Choose explicit packages; loading the entire development workspace also enables unrelated extensions.
 
 ## Contributing
 
-Issues are the front door — see [CONTRIBUTING.md](./CONTRIBUTING.md) for how contributions work here.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the fork's contribution workflow.
+Upstream issue links in retained design documents describe upstream history; they are not issues in this fork.
+Release automation is disabled unless the repository explicitly sets `ENABLE_PACKAGE_RELEASES=true`; npm publication additionally requires removing the deliberate `private` flags and configuring fork-owned publishing.
 
 ## Development
 
@@ -62,6 +69,7 @@ Issues are the front door — see [CONTRIBUTING.md](./CONTRIBUTING.md) for how c
 
 ```bash
 pnpm install
+pnpm run build:types
 ```
 
 This installs dependencies and wires the `prek` git hooks automatically via the `prepare` script.
@@ -114,7 +122,7 @@ pi
 
 This gives the agent access to:
 
-- `.pi/settings.json` — loads all packages from local source (with npm versions disabled)
+- `.pi/settings.json` — loads all workspace packages from local source
 - `.pi/prompts/` — slash commands (`/plan-improvements`, `/plan-issue`, `/tdd-plan`, `/ship`, etc.)
 - Root `AGENTS.md` — monorepo-wide conventions
 

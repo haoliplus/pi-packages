@@ -108,6 +108,19 @@ async function describeGateOnPlatform(
 // ── tests ──────────────────────────────────────────────────────────────────
 
 describe("describeBashExternalDirectoryGate", () => {
+  it("forwards every unresolved path for the parent's independent policy checks", async () => {
+    const result = await describeGate(
+      makeTcc({ input: { command: "cat /first/file /second/file" } }),
+      makeResolver(makeCheckResult("ask")),
+    );
+    expect(isGateDescriptor(result)).toBe(true);
+    expect(
+      (result as GateDescriptor).promptDetails.requirements?.map(
+        (entry) => entry?.boundaryValue,
+      ),
+    ).toEqual(["/first/file", "/second/file"]);
+  });
+
   it("returns null when tool is not bash", async () => {
     const result = await describeGate(
       makeTcc({ toolName: "read" }),

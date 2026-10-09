@@ -15,6 +15,8 @@ export interface PromptPayload {
   readonly evidence: readonly PromptEvidence[];
   /** Supplied by registered annotators; always marked as model-generated. */
   readonly annotations: readonly PromptAnnotation[];
+  /** Complete individual asks when one decision covers a tool call. */
+  readonly requirements?: readonly PromptPayload[];
 }
 
 /**
@@ -166,7 +168,18 @@ export function asPromptPayload(value: unknown): PromptPayload | undefined {
   const annotations = asArrayOf(candidate.annotations, asPromptAnnotation);
   if (!kind || !request || !evidence || !annotations) return undefined;
 
-  return { kind, request, evidence, annotations };
+  const requirements =
+    candidate.requirements === undefined
+      ? undefined
+      : asArrayOf(candidate.requirements, asPromptPayload);
+  if (candidate.requirements !== undefined && !requirements) return undefined;
+  return {
+    kind,
+    request,
+    evidence,
+    annotations,
+    ...(requirements ? { requirements } : {}),
+  };
 }
 
 function asPromptRequestFacts(value: unknown): PromptRequestFacts | undefined {

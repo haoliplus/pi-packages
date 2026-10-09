@@ -85,7 +85,8 @@ An insertion point that reads correctly at the seam can reparent what follows it
 
 ### Issue references
 
-- In long-lived docs (`docs/architecture/`, `docs/plans/`), reference GitHub issues with reference-style links — `[#42]` in the body, `[#42]: https://github.com/gotgenes/pi-packages/issues/42` at the end of the file.
+- In long-lived docs (`docs/architecture/`, `docs/plans/`), reference GitHub issues with reference-style links — `[#42]` in the body, `[#42]: https://github.com/haoliplus/pi-packages/issues/42` at the end of the file.
+  Preserve the original gotgenes URLs for inherited upstream issues; the same number does not identify the same issue in the fork.
   Bare `#42` auto-links on GitHub but not in other renderers.
   Every `[#N]:` definition must have a matching `[#N]` reference in the body (markdownlint MD053 rejects unused definitions).
   A `[#N]` wrapped in backticks is a code span, not a link reference — it does not count toward the matching-reference requirement, so the `[#N]:` definition still trips MD053.

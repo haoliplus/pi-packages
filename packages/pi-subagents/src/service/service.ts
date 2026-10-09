@@ -4,7 +4,7 @@
  * Consumers declare this package as an optional peer dependency and use
  * dynamic import to access the accessor functions:
  *
- *   const { getSubagentsService } = await import("@gotgenes/pi-subagents");
+ *   const { getSubagentsService } = await import("@haoliplus/pi-subagents");
  *   const svc = getSubagentsService();
  *   svc?.spawn("Explore", "Check for stale TODOs");
  */
@@ -183,7 +183,7 @@ export const SUBAGENT_EVENTS = {
 
 // ---- Accessor functions ----
 
-const SERVICE_KEY = Symbol.for("@gotgenes/pi-subagents:service");
+const SERVICE_KEY = Symbol.for("@haoliplus/pi-subagents:service");
 
 /** Publish the SubagentsService on globalThis for cross-extension access. */
 export function publishSubagentsService(service: SubagentsService): void {

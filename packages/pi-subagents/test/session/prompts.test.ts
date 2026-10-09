@@ -274,7 +274,7 @@ describe("buildAgentPrompt", () => {
   });
 
   // Patch 3 (RepOne #443): inject <active_agent name="..."/> tag so downstream
-  // extensions (e.g. @gotgenes/pi-permission-system) can resolve per-agent
+  // extensions (e.g. @haoliplus/pi-permission-system) can resolve per-agent
   // policy by parsing the child's system prompt.
   describe("active_agent tag injection", () => {
     it("includes <active_agent name=...> tag in replace mode after identity prefix", () => {
@@ -1148,7 +1148,7 @@ describe("buildAgentPrompt", () => {
       /**
        * An identity shaped like Pi's own: the preamble sentence, then the tool
        * surface, then the layers that follow it. The tool section is what
-       * `@gotgenes/pi-permission-system` used to rewrite in place, which is the
+       * `@haoliplus/pi-permission-system` used to rewrite in place, which is the
        * edit this prefix exists to stay clear of (#890).
        */
       const IDENTITY_WITH_TOOLS = [

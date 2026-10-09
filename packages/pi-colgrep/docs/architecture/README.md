@@ -1,6 +1,6 @@
 # Architecture
 
-This directory documents the internal architecture of `@gotgenes/pi-colgrep`.
+This directory documents the internal architecture of `@haoliplus/pi-colgrep`.
 
 ## Documents
 

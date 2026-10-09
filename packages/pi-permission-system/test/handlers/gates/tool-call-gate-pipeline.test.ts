@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { BashExternalPath } from "#src/access-intent/bash/bash-path-resolver";
-import { isGateDescriptor } from "#src/handlers/gates/descriptor";
 import { ToolCallGatePipeline } from "#src/handlers/gates/tool-call-gate-pipeline";
 import { PathNormalizer } from "#src/path/path-normalizer";
 import type { InfrastructureReadScope } from "#src/path/pi-infrastructure-read";
@@ -96,7 +95,7 @@ describe("ToolCallGatePipeline", () => {
       const inputs = makeGateInputs();
       const { runner } = makeGateRunner();
       const runSpy = vi
-        .spyOn(runner, "run")
+        .spyOn(runner, "runAll")
         .mockResolvedValue({ action: "block", reason: "first gate blocked" });
 
       const pipeline = new ToolCallGatePipeline(resolver, inputs);
@@ -182,7 +181,6 @@ describe("ToolCallGatePipeline", () => {
     it("runs the denying gate first and never reaches the asking one", async () => {
       const resolver = askingPathDenyingTool();
       const { runner, deps } = makeGateRunner();
-      const runSpy = vi.spyOn(runner, "run");
       const pipeline = new ToolCallGatePipeline(resolver, makeGateInputs());
 
       const result = await pipeline.evaluate(
@@ -191,9 +189,10 @@ describe("ToolCallGatePipeline", () => {
       );
 
       expect(result).toMatchObject({ action: "block" });
-      expect(runSpy).toHaveBeenCalledTimes(1);
-      const firstGate = runSpy.mock.calls[0][0];
-      expect(isGateDescriptor(firstGate) && firstGate.surface).toBe("read");
+      expect(deps.reporter.emitDecision).toHaveBeenCalledTimes(1);
+      expect(deps.reporter.emitDecision).toHaveBeenCalledWith(
+        expect.objectContaining({ surface: "read", result: "deny" }),
+      );
       expect(deps.escalate).not.toHaveBeenCalled();
     });
 

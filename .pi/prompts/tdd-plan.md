@@ -79,7 +79,7 @@ For **each** step in the plan's "TDD Order", in order:
 
 1. **Red.**
    Write the failing tests the step describes.
-   Run only the affected test file, unpiped: `pnpm --filter @gotgenes/<pkg> exec vitest run <test-path>` and confirm failures (plain `pnpm vitest run` fails at the repo root in this workspace; a `| tail` or `| grep` replaces Vitest's exit status with the filter's).
+   Run only the affected test file, unpiped: `pnpm --filter @haoliplus/<pkg> exec vitest run <test-path>` and confirm failures (plain `pnpm vitest run` fails at the repo root in this workspace; a `| tail` or `| grep` replaces Vitest's exit status with the filter's).
    Run Red in its own tool call, before the implementing `Edit`/`Write` — calls in one batch run concurrently, so a batched Red run can see green.
    When the step pins a literal pattern (regex, glob, format string), derive your own input set — the plan's examples are a floor, not the case list.
    Run the pattern over the values the repo already produces in bulk (`git tag --list`, `gh pr list`) before committing.

@@ -90,6 +90,8 @@ export interface PromptPermissionDetails {
    * no intent leaves this absent.
    */
   accessIntent?: ForwardedAccessFacts;
+  /** All gates requiring approval for one call; absent facts stay unknown. */
+  requirements?: readonly (ForwardedAccessFacts | undefined)[];
 }
 
 /**

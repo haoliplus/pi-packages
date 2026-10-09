@@ -340,7 +340,6 @@ describe("floorExemptionOf", () => {
       "xargs -I{} basename {}",
       "xargs cat",
       "time cat x",
-      "env FOO=bar grep x",
       "sudo grep foo /etc/hosts",
       "find . -name '*.ts' -exec wc -l {} +",
       "fd -e ts -x cat",
@@ -359,6 +358,7 @@ describe("floorExemptionOf", () => {
   describe("a wrapper running anything else", () => {
     it.each([
       ["xargs pnpm test", "the inner command is not in the core"],
+      ["env FOO=bar grep x", "environment assignments change the invocation"],
       ["time pnpm test", "the inner command is not in the core"],
       ["xargs git commit", "the inner command is subcommand-dependent"],
       ["xargs ./grep foo", "a path-qualified head word is never core"],
@@ -456,7 +456,6 @@ describe("floorExemptionOf", () => {
         "stdbuf -o L pnpm test",
         "setsid pnpm test",
         "time timeout 5 pnpm test",
-        "time FOO=1 pnpm test",
         "/usr/bin/time pnpm test",
         "time ./scripts/x.sh",
         "time -f %e pnpm test",

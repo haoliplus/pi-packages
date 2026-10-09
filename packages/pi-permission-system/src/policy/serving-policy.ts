@@ -83,6 +83,8 @@ export class ResolverServingPolicy implements ServingPolicy {
  * consulted; a session grant names a command the user already approved, which
  * the local gate honors through its session fast path; and yolo approves every
  * synthetic ask, keeping the floor's sentinel as the reported pattern.
+ * A containment floor cannot use that session shortcut: an older lexical
+ * grant does not prove current symlink containment.
  */
 function honorChildFloor(
   check: PermissionCheckResult,
@@ -92,7 +94,7 @@ function honorChildFloor(
   if (
     floor === undefined ||
     check.state !== "allow" ||
-    check.source === "session"
+    (check.source === "session" && floor !== "<external-containment>")
   ) {
     return check;
   }

@@ -7,11 +7,11 @@ import type {
   PermissionsReadyEvent,
   PermissionsService,
   PromptPermissionDetails,
-} from "@gotgenes/pi-permission-system";
+} from "@haoliplus/pi-permission-system";
 import {
   publishPermissionsService,
   unpublishPermissionsService,
-} from "@gotgenes/pi-permission-system";
+} from "@haoliplus/pi-permission-system";
 import type { Mock, MockInstance } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -89,6 +89,9 @@ function makeService(): PermissionsService & {
   return {
     checkPermission: vi.fn(),
     getToolPermission: vi.fn(),
+    isToolFullyDenied: vi.fn(() => false),
+    getToolAccessExtractor: vi.fn(),
+    getToolInputFormatter: vi.fn(),
     registerToolInputFormatter: vi.fn(() => () => {}),
     registerToolAccessExtractor: vi.fn(() => () => {}),
     registerAuthorizer: vi.fn(() => disposer),

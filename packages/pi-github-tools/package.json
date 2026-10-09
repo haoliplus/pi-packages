@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-github-tools",
+  "name": "@haoliplus/pi-github-tools",
   "version": "6.1.0",
   "description": "Pi extension providing deterministic GitHub CI, release, and issue tools.",
   "type": "module",
@@ -35,18 +35,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-github-tools"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-github-tools#readme",
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-github-tools#readme",
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "pi": {
     "extensions": [
@@ -65,5 +62,6 @@
     "typebox": "^1.2.8",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  }
+  },
+  "private": true
 }

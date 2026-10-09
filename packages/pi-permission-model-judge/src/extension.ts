@@ -20,11 +20,11 @@ import {
   type ExtensionAPI,
   getAgentDir,
 } from "@earendil-works/pi-coding-agent";
-import type { PermissionsReadyEvent } from "@gotgenes/pi-permission-system";
+import type { PermissionsReadyEvent } from "@haoliplus/pi-permission-system";
 import {
   getPermissionsService,
   PERMISSIONS_READY_CHANNEL,
-} from "@gotgenes/pi-permission-system";
+} from "@haoliplus/pi-permission-system";
 
 import { type LoadConfigResult, loadModelJudgeConfig } from "./config-loader";
 import {
@@ -118,7 +118,7 @@ export function createModelJudgeExtension(
     }
     warnedUnresolvedService = true;
     warn(
-      "this session's node published no permission service, so the model-judge link is not registered — @gotgenes/pi-permission-system 27.0.0 or later must be loaded in the same session.",
+      "this session's node published no permission service, so the model-judge link is not registered — @haoliplus/pi-permission-system 27.0.0 or later must be loaded in the same session.",
     );
   }
 }

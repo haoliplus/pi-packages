@@ -1,8 +1,12 @@
-# @gotgenes/pi-permission-model-judge
+# @haoliplus/pi-permission-model-judge
+
+This package is maintained in the [haoliplus fork](https://github.com/haoliplus/pi-packages) of [gotgenes/pi-packages](https://github.com/gotgenes/pi-packages).
+Thanks to the upstream authors and contributors; original MIT notices are retained.
+The `@haoliplus/*` workspace is private and installed from a local checkout after `pnpm install --frozen-lockfile` and `pnpm run build:types`; it is not published to npm.
 
 A [Pi](https://github.com/earendil-works/pi) extension that reviews out-of-directory permission asks with a light model and auto-denies mistyped paths with a teaching reason.
 
-It is the first consumer of [`@gotgenes/pi-permission-system`](../pi-permission-system/)'s `registerAuthorizer` seam: it registers a `"model-judge"` chain link that reviews `external_directory` asks, and — when a path matches one of your configured typo patterns — asks a model whether the path is a mistake.
+It is the first consumer of [`@haoliplus/pi-permission-system`](../pi-permission-system/)'s `registerAuthorizer` seam: it registers a `"model-judge"` chain link that reviews `external_directory` asks, and — when a path matches one of your configured typo patterns — asks a model whether the path is a mistake.
 A confirmed typo is denied with a short explanation (the wrong segment and the correct location) so the invoking agent self-corrects; everything else defers to the normal prompt.
 
 ## Why
@@ -53,10 +57,10 @@ Because every pattern-matched ask leaves a positive record, a misconfiguration t
 ## Install
 
 ```bash
-pnpm add -D @gotgenes/pi-permission-model-judge
+pnpm add -D @haoliplus/pi-permission-model-judge
 ```
 
-This extension does nothing on its own — it requires `@gotgenes/pi-permission-system` (peer dependency) and `@earendil-works/pi-ai` (provided by Pi).
+This extension does nothing on its own — it requires `@haoliplus/pi-permission-system` (peer dependency) and `@earendil-works/pi-ai` (provided by Pi).
 
 The peer must be **27.0.0 or later**.
 The link registers into the service of the session node that announced itself on `permissions:ready`, and an older pi-permission-system announces no session id — so on one, the link never registers and the extension says so once per session.
@@ -122,14 +126,14 @@ The model mechanism: the operator-declared typo-pattern pre-filter, the model ca
 
 - _Granting access, or deciding on its own authority._
   The verdict range is `deny` or `defer`, never `allow`, and every failure path defers.
-  The judge advises; `@gotgenes/pi-permission-system` decides, and caps any link's authority regardless.
+  The judge advises; `@haoliplus/pi-permission-system` decides, and caps any link's authority regardless.
 - _Judgment purposes other than mistyped paths._
   A different kind of judgment belongs in a different chain link, not another mode of this one.
 - _Shipping built-in typo knowledge._
   Patterns are operator-declared, so an unconfigured instance defers everything and auto-denies nothing.
 - _Keeping its own audit log._
   Decisions go to pi-permission-system's shared review log, keyed by request ID.
-- _Changing `@gotgenes/pi-permission-system`._
+- _Changing `@haoliplus/pi-permission-system`._
   The authorizer seam and the path-raising gates are consumed as they ship.
 
 **Where adjacent requests belong.**

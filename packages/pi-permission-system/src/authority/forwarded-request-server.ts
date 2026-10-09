@@ -135,6 +135,13 @@ function buildForwardedAskDetails(
     ...(request.accessIntent
       ? { accessIntent: toAccessFacts(request.accessIntent) }
       : {}),
+    ...(request.requirements
+      ? {
+          requirements: request.requirements.map((intent) =>
+            intent ? toAccessFacts(intent) : undefined,
+          ),
+        }
+      : {}),
   };
 }
 
@@ -406,6 +413,7 @@ export class ForwardedRequestServer implements InboxProcessor {
       writeJsonFileAtomic(this.logger, responsePath, {
         approved: decision.approved,
         state: decision.state,
+        ...(request.requirements ? { requirementsEvaluated: true } : {}),
         denialReason: decision.denialReason,
         responderSessionId: currentSessionId,
         respondedAt: Date.now(),
@@ -445,9 +453,14 @@ export class ForwardedRequestServer implements InboxProcessor {
     request: ForwardedPermissionRequest,
     logDetails: Record<string, unknown>,
   ): Promise<PermissionPromptDecision> {
-    const check = request.accessIntent
-      ? this.policy.resolve(request.accessIntent)
-      : null;
+    const intents = request.requirements ?? [request.accessIntent ?? null];
+    const checks = intents.map((intent) =>
+      intent ? this.policy.resolve(intent) : null,
+    );
+    const denied = checks.find((check) => check?.state === "deny");
+    const check =
+      denied ??
+      (checks.every((entry) => entry?.state === "allow") ? checks[0] : null);
 
     if (check && check.state !== "ask") {
       // The rule is carried in full rather than left to the event name: the
@@ -455,7 +468,7 @@ export class ForwardedRequestServer implements InboxProcessor {
       // requester's record to lean on.
       const decidedBy: DecisionSource = {
         kind: "rule",
-        surface: request.accessIntent?.surface ?? check.toolName,
+        surface: intents[checks.indexOf(check)]?.surface ?? check.toolName,
         pattern: check.matchedPattern ?? null,
         origin: check.origin,
       };

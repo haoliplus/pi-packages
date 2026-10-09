@@ -1,6 +1,10 @@
-# @gotgenes/pi-nocd
+# @haoliplus/pi-nocd
 
-[![npm version](https://img.shields.io/npm/v/@gotgenes/pi-nocd?style=flat&logo=npm&logoColor=white)](https://www.npmjs.com/package/@gotgenes/pi-nocd) [![CI](https://img.shields.io/github/actions/workflow/status/gotgenes/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/gotgenes/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
+This package is maintained in the [haoliplus fork](https://github.com/haoliplus/pi-packages) of [gotgenes/pi-packages](https://github.com/gotgenes/pi-packages).
+Thanks to the upstream authors and contributors; original MIT notices are retained.
+The `@haoliplus/*` workspace is private and installed from a local checkout after `pnpm install --frozen-lockfile` and `pnpm run build:types`; it is not published to npm.
+
+[![CI](https://img.shields.io/github/actions/workflow/status/haoliplus/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/haoliplus/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
 
 Pi extension that adds an instruction to the system prompt forbidding the agent from `cd`-prefixing the current working directory.
 
@@ -17,20 +21,20 @@ This extension hooks `before_agent_start` and adds a prompt section that supplie
 It repeats the literal resolved path (from `ctx.cwd`) only to make the forbidden `cd <path> &&` example concrete, not because the path is otherwise unavailable to the agent.
 
 Because the section names a literal path, each session writes its own.
-A subagent session runs its own copy of this extension, which writes a section naming the child's directory, so a child given an isolated workspace (for example a git worktree from [@gotgenes/pi-subagents-worktrees](https://www.npmjs.com/package/@gotgenes/pi-subagents-worktrees)) is told where its own shell commands execute.
-[@gotgenes/pi-subagents](https://www.npmjs.com/package/@gotgenes/pi-subagents) drops everything from the parent's `<cwd>` section onward when it builds a child's prompt, so the parent's section is not carried along.
+A subagent session runs its own copy of this extension, which writes a section naming the child's directory, so a child given an isolated workspace (for example a git worktree from [@haoliplus/pi-subagents-worktrees](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-subagents-worktrees)) is told where its own shell commands execute.
+[@haoliplus/pi-subagents](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-subagents) drops everything from the parent's `<cwd>` section onward when it builds a child's prompt, so the parent's section is not carried along.
 
 ## Install
 
 ```bash
-pi install npm:@gotgenes/pi-nocd
+pi install /absolute/path/to/pi-packages/packages/pi-nocd
 ```
 
 Or add it to your Pi settings (`~/.pi/agent/settings.json`):
 
 ```json
 {
-  "packages": ["npm:@gotgenes/pi-nocd"]
+  "packages": ["npm:@haoliplus/pi-nocd"]
 }
 ```
 

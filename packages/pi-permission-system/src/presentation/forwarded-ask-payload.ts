@@ -30,6 +30,14 @@ export function buildForwardedAskPayload(
     ? {
         ...request.payload,
         request: { ...request.payload.request, requester },
+        ...(request.payload.requirements
+          ? {
+              requirements: request.payload.requirements.map((payload) => ({
+                ...payload,
+                request: { ...payload.request, requester },
+              })),
+            }
+          : {}),
       }
     : degradedForwardedPayload(request, requester);
 }

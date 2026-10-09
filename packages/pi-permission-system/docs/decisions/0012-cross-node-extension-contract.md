@@ -235,7 +235,7 @@ A future consumer should expect the same trade.
 
 #### Amendment (2026-08-30, [#796]): the process-root slot is removed
 
-The deferral's condition has been met, so the window closes and the whole mechanism goes — reader, both writers, the `Symbol.for("@gotgenes/pi-permission-system:service")` slot, and the `PI_PERMISSION_SYSTEM_DEP0001` warning with them.
+The deferral's condition has been met, so the window closes and the whole mechanism goes — reader, both writers, the `Symbol.for("@haoliplus/pi-permission-system:service")` slot, and the `PI_PERMISSION_SYSTEM_DEP0001` warning with them.
 This supersedes the "major release now" alternative below, which rejected removal in the [#699] cut on the grounds that the window cost nothing.
 It cost nothing then and it buys nothing now.
 
@@ -271,7 +271,7 @@ The channel exists because no already-announced moment can answer the question, 
 - `session-created` fires before the child's extensions load, so nothing has published yet either way.
 - `disposed` fires *after* the child's `session_shutdown`, which unpublishes the keyed service — so a healthy child is indistinguishable from an unguarded one, and auditing there would false-alarm on every child.
 - A deferred sweep of registered children on the parent's next `before_agent_start` is post-hoc by construction: a foreground child runs to completion inside the parent's own tool call, so the earliest such sweep reports a child that has already executed every tool in its allowlist ungated.
-  It is also not reliably reachable — a completed child stays registered only until the implementation releases its session, which in `@gotgenes/pi-subagents` is an interval sweep against a configurable retention window, so whether the parent ever sees a given child depends on timing the permission system does not control.
+  It is also not reliably reachable — a completed child stays registered only until the implementation releases its session, which in `@haoliplus/pi-subagents` is an interval sweep against a configurable retention window, so whether the parent ever sees a given child depends on timing the permission system does not control.
 
 `bindExtensions()` awaits the child's `session_start` emit, so its resolution is the first instant at which "this child published a service" is a settled fact.
 That is a seam, not a delay: nothing is slept on and nothing is polled.
@@ -380,4 +380,4 @@ Superseded by decision 7's [#796] amendment: the window turned out to have no le
 [#861]: https://github.com/gotgenes/pi-packages/issues/861
 [#794]: https://github.com/gotgenes/pi-packages/issues/794
 [#796]: https://github.com/gotgenes/pi-packages/issues/796
-[ADR-0002]: https://github.com/gotgenes/pi-packages/blob/main/packages/pi-subagents/docs/decisions/0002-extensions-on-a-minimal-core.md
+[ADR-0002]: https://github.com/haoliplus/pi-packages/blob/main/packages/pi-subagents/docs/decisions/0002-extensions-on-a-minimal-core.md

@@ -25,9 +25,8 @@ import type { ToolCallContext } from "./types";
  * A proven read resolves on `path_read`, a proven write on `path_write`, and
  * an unproven token on the bare family, whose two members the resolver folds
  * most-restrictive (ADR 0013 §10). The deciding token's surface is the one the
- * descriptor, the payload, the access facts, the decision, and the session
- * approval all carry — a session grant is never wider than what the gate
- * proved.
+ * descriptor and decision carry. Every asking token retains its own surface
+ * in the payload, forwarded facts and session approval.
  *
  * Returns `null` when the gate does not apply (not a shell invocation, no
  * command, no tokens extracted, or all tokens evaluate to `allow`).
@@ -133,7 +132,6 @@ export function describeBashPathGate(
   // Derive the patterns from the lexical absolute form (the cd-aware resolved
   // path), so they match the values a later call produces. For an unknown base
   // (`forLiteral`) `value()` is the raw token.
-  const patterns = normalizer.approvalPatternsFor(worstEntry.path);
   const surface = worstEntry.surface;
   const payload = buildPathAskPayload({
     toolName: tcc.toolName,
@@ -142,19 +140,47 @@ export function describeBashPathGate(
     matchedPattern: worstCheck.matchedPattern,
     surface,
   });
+  const requirements = uncovered.map((entry) => ({
+    ...accessFactsFromPath(entry.surface, entry.path),
+    ...(entry.check.floor === undefined ? {} : { floor: entry.check.floor }),
+  }));
 
   return {
     surface,
     input: { path: worstToken },
-    payload,
-    sessionApproval: SessionApproval.forPatterns(surface, patterns),
+    payload:
+      uncovered.length < 2
+        ? payload
+        : {
+            ...payload,
+            requirements: uncovered.map((entry) =>
+              buildPathAskPayload({
+                toolName: tcc.toolName,
+                pathValue: entry.token,
+                agentName: tcc.agentName,
+                matchedPattern: entry.check.matchedPattern,
+                surface: entry.surface,
+              }),
+            ),
+          },
+    sessionApproval: SessionApproval.forGrants(
+      uncovered.flatMap((entry) =>
+        normalizer
+          .approvalPatternsFor(entry.path)
+          .map((pattern) => ({ surface: entry.surface, pattern })),
+      ),
+    ),
     promptDetails: {
       source: "tool_call",
       agentName: tcc.agentName,
       toolCallId: tcc.toolCallId,
       toolName: tcc.toolName,
       command,
-      accessIntent: accessFactsFromPath(surface, worstEntry.path),
+      accessIntent: {
+        ...accessFactsFromPath(surface, worstEntry.path),
+        ...(worstCheck.floor === undefined ? {} : { floor: worstCheck.floor }),
+      },
+      ...(requirements.length > 1 ? { requirements } : {}),
     },
     logContext: {
       source: "tool_call",

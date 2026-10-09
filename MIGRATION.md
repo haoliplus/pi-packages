@@ -213,7 +213,7 @@ Archived repos remain readable (git history, old issues) but disallow new issues
 
 ## 13. Consolidate .pi/settings.json with self-providing pattern
 
-Each package previously had its own `.pi/settings.json` that referenced `npm:@gotgenes/pi-github-tools` and other packages.
+Each package previously had its own `.pi/settings.json` that referenced `npm:@haoliplus/pi-github-tools` and other packages.
 In the monorepo, a single root `.pi/settings.json` replaces all of them.
 
 Use the **self-providing pattern** to load local extensions while suppressing global npm duplicates.
@@ -227,10 +227,10 @@ Pi deduplicates by identity — npm package name and local absolute path are dif
     "./packages/pi-permission-system",
     "./packages/pi-subagents",
 
-    { "source": "npm:@gotgenes/pi-github-tools", "extensions": [] },
-    { "source": "npm:@gotgenes/pi-autoformat", "extensions": [] },
-    { "source": "npm:@gotgenes/pi-permission-system", "extensions": [] },
-    { "source": "npm:@gotgenes/pi-subagents", "extensions": [] },
+    { "source": "npm:@haoliplus/pi-github-tools", "extensions": [] },
+    { "source": "npm:@haoliplus/pi-autoformat", "extensions": [] },
+    { "source": "npm:@haoliplus/pi-permission-system", "extensions": [] },
+    { "source": "npm:@haoliplus/pi-subagents", "extensions": [] },
 
     "npm:pi-prompt-template-model",
     "npm:pi-web-access",

@@ -347,6 +347,13 @@ export class PermissionManager implements ScopedPermissionManager {
     sessionRules?: Ruleset,
   ): PermissionCheckResult {
     const { composedRules } = this.resolvePermissions(intent.agentName);
+    // Session grants answer an ask, never revoke a standing denial. Evaluate
+    // the completed config first so its own last-match-wins exceptions remain
+    // effective (an earlier deny alone does not lock the whole surface).
+    if (sessionRules?.length) {
+      const configured = this.checkAgainstRules(intent, composedRules);
+      if (configured.state === "deny") return configured;
+    }
     const composedWithSession: Ruleset = sessionRules?.length
       ? [...composedRules, ...sessionRules]
       : composedRules;
@@ -357,6 +364,13 @@ export class PermissionManager implements ScopedPermissionManager {
       ? rewriteAsksToYolo(composedWithSession)
       : composedWithSession;
 
+    return this.checkAgainstRules(intent, fullRules);
+  }
+
+  private checkAgainstRules(
+    intent: ResolvedAccessIntent,
+    fullRules: Ruleset,
+  ): PermissionCheckResult {
     if (intent.kind === "path-values") {
       const lookupValues =
         intent.values.length > 0 ? [...intent.values] : ["*"];
@@ -480,7 +494,7 @@ function evaluateCheck(
 }
 
 const MCP_TOOL_KEY_MIGRATION_GUIDE =
-  "https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md";
+  "https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md";
 
 /** The notice asking the operator to move top-level `mcp__…` keys under `mcp`. */
 function formatMcpToolKeyPortNotice(keys: readonly string[]): string {

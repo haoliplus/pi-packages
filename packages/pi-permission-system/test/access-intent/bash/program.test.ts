@@ -610,12 +610,19 @@ describe("BashProgram", () => {
     describe("a redirect hosted inside the command", () => {
       it.each([
         ["2>/dev/null git push --force", "git push --force"],
-        ["FOO=1 2>/dev/null git push --force", "git push --force"],
         ["git <<< x push --force", "git push --force"],
         ["cat f <<< hi", "cat f"],
       ])("leaves the redirect out of %s", async (command, text) => {
         const program = await BashProgram.parse(command, normalizer);
         expect(program.commands()).toEqual([{ text }]);
+      });
+
+      it("keeps an environment-prefixed redirect in the approval scope", async () => {
+        const command = "FOO=1 2>/dev/null git push --force";
+        const program = await BashProgram.parse(command, normalizer);
+        expect(program.commands()).toEqual([
+          { text: "git push --force", unprovenRead: command },
+        ]);
       });
 
       it("reads the head word past a leading redirect", async () => {
@@ -879,7 +886,7 @@ describe("BashProgram", () => {
       ])("descends into %s", async (command, enclosing, inner) => {
         const program = await BashProgram.parse(command, normalizer);
         expect(program.commands()).toEqual([
-          { text: enclosing },
+          { text: enclosing, unprovenRead: command },
           { text: inner, context: "command_substitution" },
         ]);
       });
@@ -887,7 +894,7 @@ describe("BashProgram", () => {
       it("descends into a process substitution read as input", async () => {
         const program = await BashProgram.parse("cat < <(rm c)", normalizer);
         expect(program.commands()).toEqual([
-          { text: "cat" },
+          { text: "cat", unprovenRead: "cat < <(rm c)" },
           { text: "rm c", context: "process_substitution" },
         ]);
       });
@@ -898,7 +905,7 @@ describe("BashProgram", () => {
           normalizer,
         );
         expect(program.commands()).toEqual([
-          { text: "echo hi" },
+          { text: "echo hi", unprovenRead: "echo hi > ${DIR}/$(rm z)" },
           { text: "rm z", context: "command_substitution" },
         ]);
       });
@@ -909,8 +916,8 @@ describe("BashProgram", () => {
           normalizer,
         );
         expect(program.commands()).toEqual([
-          { text: "cd /p" },
-          { text: "echo hi" },
+          { text: "cd /p", unprovenRead: "cd /p && echo hi > $(rm x)" },
+          { text: "echo hi", unprovenRead: "cd /p && echo hi > $(rm x)" },
           { text: "rm x", context: "command_substitution" },
         ]);
       });
@@ -1188,7 +1195,10 @@ describe("BashProgram", () => {
         normalizer,
       );
       expect(program.commands()).toEqual([
-        { text: "diff <(cat /etc/shadow)" },
+        {
+          text: "diff <(cat /etc/shadow)",
+          unprovenRead: "diff <(cat /etc/shadow)",
+        },
         { text: "cat /etc/shadow", context: "process_substitution" },
       ]);
     });
@@ -1272,12 +1282,17 @@ describe("BashProgram", () => {
         expect(program.commands()).toEqual([
           {
             text: "time (rm x)",
+            unprovenRead: "2>$(rm y) time (rm x)",
             wrapperKind: "indirection",
             executedUnit: "(rm x)",
             floorExemption: "execution-modifier",
           },
           { text: "rm y", context: "command_substitution" },
-          { text: "rm x", context: "subshell" },
+          {
+            text: "rm x",
+            context: "subshell",
+            unprovenRead: "2>$(rm y) time (rm x)",
+          },
         ]);
       });
 
@@ -1374,13 +1389,19 @@ describe("BashProgram", () => {
         normalizer,
       );
       expect(program.commands()).toEqual([
-        { text: "aws ec2 terminate-instances --instance-ids i-1" },
+        {
+          text: "aws ec2 terminate-instances --instance-ids i-1",
+          unprovenRead:
+            "AWS_PROFILE=prod aws ec2 terminate-instances --instance-ids i-1",
+        },
       ]);
     });
 
     it("strips multiple leading env-var assignments", async () => {
       const program = await BashProgram.parse("A=1 B=2 aws s3 ls", normalizer);
-      expect(program.commands()).toEqual([{ text: "aws s3 ls" }]);
+      expect(program.commands()).toEqual([
+        { text: "aws s3 ls", unprovenRead: "A=1 B=2 aws s3 ls" },
+      ]);
     });
 
     it("strips the env-var prefix of each command in a chain", async () => {
@@ -1389,7 +1410,10 @@ describe("BashProgram", () => {
         normalizer,
       );
       expect(program.commands()).toEqual([
-        { text: "aws sts get-caller-identity" },
+        {
+          text: "aws sts get-caller-identity",
+          unprovenRead: "X=1 aws sts get-caller-identity",
+        },
         { text: "ls" },
       ]);
     });
@@ -1431,6 +1455,7 @@ describe("BashProgram", () => {
         expect(program.commands()).toEqual([
           {
             text: 'bash -c "rm -rf /"',
+            unprovenRead: 'AWS_PROFILE=prod bash -c "rm -rf /"',
             wrapperKind: "opaque-payload",
             executedUnit: "rm -rf /",
             spellings: ["bash -c /projects/my-app/rm -rf "],
@@ -1520,6 +1545,7 @@ describe("BashProgram", () => {
         expect(program.commands()).toEqual([
           {
             text: "sudo aws s3 ls",
+            unprovenRead: "AWS_PROFILE=prod sudo aws s3 ls",
             wrapperKind: "indirection",
             executedUnit: "aws s3 ls",
           },
@@ -1558,6 +1584,7 @@ describe("BashProgram", () => {
               text: command,
               wrapperKind: "indirection",
               executedUnit,
+              unprovenRead: command,
               ...spellings,
             },
           ]);
@@ -1696,10 +1723,10 @@ describe("BashProgram", () => {
           ]);
         });
 
-        it("still exempts a computed word behind a literal", async () => {
+        it("does not exempt a computed path behind a literal", async () => {
           await expect(
             exemptions("xargs find packages/*/docs"),
-          ).resolves.toEqual(["core-reader"]);
+          ).resolves.toEqual([undefined]);
         });
 
         it("still exempts a quoted argument that withdraws nothing", async () => {

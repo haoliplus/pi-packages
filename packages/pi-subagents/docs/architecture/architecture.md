@@ -9,7 +9,7 @@ This document describes the architecture of the pi-subagents fork: a focused, co
 2. **Composable by default** — other extensions can spawn agents, observe their lifecycle, and display their state without importing this package directly.
 3. **Typed API boundary** — this package exports a `SubagentsService` interface and `Symbol.for()` accessors (`publishSubagentsService` / `getSubagentsService`).
    Consumers declare this package as an optional peer dependency and use dynamic import for compile-time types.
-   The runtime bridge is `Symbol.for("@gotgenes/pi-subagents:service")` on `globalThis` — no separate API package.
+   The runtime bridge is `Symbol.for("@haoliplus/pi-subagents:service")` on `globalThis` — no separate API package.
 4. **No time-based scheduling** — cron-style timed dispatch (upstream's `schedule.ts` subsystem) is removed from the core (#52).
    Timed dispatch is a separate concern that any extension can implement by calling `spawn()` on the published API.
    The max-concurrent admission gate is not scheduling in this sense — concurrency management stays in core.
@@ -58,7 +58,7 @@ Pi's client-server split is a deferral pending an upstream capability (`docs/arc
 The parity status of the SDK `spawn()` path against the tool path, the stability guarantee carried by the lifecycle event payloads, parent-data redaction for SDK-spawned children, and ownership of `get_subagent_result` presentation are all unstated rather than settled.
 `SubagentRecord`'s own guarantee is no longer among them: [decision 0005](../decisions/0005-subagent-record-admission-policy.md) settles what the public snapshot admits and which direction the contract runs.
 
-The reimplement-don't-merge contribution pattern, applied across eight closed pull requests, is a repo-wide process rather than a scope boundary, and is documented in the repository's [contributing guide](https://github.com/gotgenes/pi-packages/blob/main/CONTRIBUTING.md).
+The reimplement-don't-merge contribution pattern, applied across eight closed pull requests, is a repo-wide process rather than a scope boundary, and is documented in the repository's [contributing guide](https://github.com/haoliplus/pi-packages/blob/main/CONTRIBUTING.md).
 
 ## Domain model
 
@@ -349,7 +349,7 @@ src/
 ├── persisted-record.ts             subagents:record session-entry contract (writer's builder, reader's parser)
 ├── settings.ts                     SettingsManager (persistent operational settings)
 ├── debug.ts                        debug logging utility
-├── layered-settings.ts             loadLayeredSettings helper (published as @gotgenes/pi-subagents/settings)
+├── layered-settings.ts             loadLayeredSettings helper (published as @haoliplus/pi-subagents/settings)
 │
 ├── config/                         agent type definitions and resolution
 │   ├── agent-types.ts              AgentTypeRegistry class
@@ -450,7 +450,7 @@ It also reads the parent session's `subagents:record` entries (`persisted-record
 
 ```mermaid
 flowchart TD
-    subgraph core["@gotgenes/pi-subagents"]
+    subgraph core["@haoliplus/pi-subagents"]
         direction TB
         exports["SubagentsService API<br/>publish / getSubagentsService<br/>SubagentRecord, SubagentStatus"]
         engine["Tools: subagent, get_subagent_result,<br/>steer_subagent<br/>SubagentManager, createSubagentSession, SubagentSession"]
@@ -473,17 +473,17 @@ They declare this package as an optional peer dependency and use dynamic import 
 - `createSubagentSession` — assembly factory: session creation and extension binding; returns a born-complete `SubagentSession`.
 - `SubagentSession` — the born-complete child session: drives the turn loop (`runTurnLoop`/`resumeTurnLoop`), steers, and disposes (firing `disposed` at true session disposal, so resume executions are registry-detected).
 - `child-lifecycle` — publishes the child-execution lifecycle (`spawning`, `session-created` before `bindExtensions()`, `bound` after it resolves, `completed`, `disposed`) on `pi.events`.
-  Reactive consumers subscribe: `@gotgenes/pi-permission-system` registers each child session on `session-created`, audits it for a permission node of its own on `bound`, and unregisters it on `disposed`.
+  Reactive consumers subscribe: `@haoliplus/pi-permission-system` registers each child session on `session-created`, audits it for a permission node of its own on `bound`, and unregisters it on `disposed`.
   This replaced the former outbound `permission-bridge` (#261, [ADR-0002]) — the core no longer looks up a named consumer.
 - `workspace` — the single generative seam (#262, [ADR-0002]): a registered `WorkspaceProvider` supplies a child's cwd plus bracketed `dispose()` at run-start.
-  With no provider, children run in the parent cwd (default unchanged); the git worktree strategy lives behind this seam in `@gotgenes/pi-subagents-worktrees` (#263, the seam's first consumer).
+  With no provider, children run in the parent cwd (default unchanged); the git worktree strategy lives behind this seam in `@haoliplus/pi-subagents-worktrees` (#263, the seam's first consumer).
 - `session-config` — pure configuration assembler (called by `createSubagentSession`).
 - `SubagentRuntime` — session-scoped state bag with methods.
 - `ParentSnapshot` — immutable snapshot of parent session state, captured once at spawn time.
 - `record-observer` — session-event observer that updates record statistics without callback threading.
 - Agent type registry — default agents, custom `.md` file loading.
 - Prompt assembly, context extraction, skills, environment.
-- Worktree isolation — evicted to `@gotgenes/pi-subagents-worktrees` via the workspace provider seam in Phase 16 (#263, [ADR-0002]); `git` no longer appears in the core.
+- Worktree isolation — evicted to `@haoliplus/pi-subagents-worktrees` via the workspace provider seam in Phase 16 (#263, [ADR-0002]); `git` no longer appears in the core.
 - Token usage tracking.
 - Session directory derivation and persisted `SessionManager` for subagent transcripts.
 - Settings persistence.
@@ -497,7 +497,7 @@ Naming an extension tool in `tools:` is therefore the supported way to give a ch
 
 The core does not widen that on the agent's behalf, and no settings key may name a tool.
 Inheriting every extension tool a child registers would hand a read-only agent whatever write-capable tools the parent's extensions happen to publish — a capability decision that belongs to whoever writes the agent file, expressed per agent, not a default.
-Tool _restriction_ beyond that stays with `@gotgenes/pi-permission-system`, per [ADR-0002].
+Tool _restriction_ beyond that stays with `@haoliplus/pi-permission-system`, per [ADR-0002].
 
 Pi supplies `codemode`, `tool_search`, and MCP tools through built-in extensions it hands only to its own CLI session, so `createSubagentSession` hands them to the child's loader itself, and only those the allowlist calls for (`builtin-extensions.ts`).
 They go in as `builtin: true, replaceable: true` entries under Pi's own names, so the operator's `-builtin:<name>` setting and Pi's replacement rule apply to children as they do to the parent.
@@ -525,7 +525,7 @@ It reaches the SDK as the `excludeTools` denylist, which Pi reapplies on every t
 
 ## SubagentsService
 
-The `SubagentsService` interface, accessor functions, and serializable types are exported from `@gotgenes/pi-subagents` via the `./service` export map entry.
+The `SubagentsService` interface, accessor functions, and serializable types are exported from `@haoliplus/pi-subagents` via the `./service` export map entry.
 No separate API package is needed.
 
 Consumers declare this package as an optional peer dependency:
@@ -533,10 +533,10 @@ Consumers declare this package as an optional peer dependency:
 ```json
 {
   "peerDependencies": {
-    "@gotgenes/pi-subagents": ">=5.0.0"
+    "@haoliplus/pi-subagents": ">=5.0.0"
   },
   "peerDependenciesMeta": {
-    "@gotgenes/pi-subagents": { "optional": true }
+    "@haoliplus/pi-subagents": { "optional": true }
   }
 }
 ```
@@ -544,7 +544,7 @@ Consumers declare this package as an optional peer dependency:
 At runtime, consumers use dynamic import for type-safe access to the accessor functions:
 
 ```typescript
-const { getSubagentsService } = await import("@gotgenes/pi-subagents");
+const { getSubagentsService } = await import("@haoliplus/pi-subagents");
 const svc = getSubagentsService();
 if (svc) {
   svc.spawn("Explore", "Check for stale TODOs");
@@ -552,7 +552,7 @@ if (svc) {
 ```
 
 Pi's extension loader creates a fresh `jiti` instance per extension with `moduleCache: false`, so module-scoped singletons don't survive across extensions.
-The accessor functions use `Symbol.for("@gotgenes/pi-subagents:service")` on `globalThis`, which is process-global by spec, to bridge this gap.
+The accessor functions use `Symbol.for("@haoliplus/pi-subagents:service")` on `globalThis`, which is process-global by spec, to bridge this gap.
 The dynamic import provides compile-time types; the `Symbol.for()` key is the actual runtime channel.
 
 ### Interface
@@ -569,7 +569,7 @@ Key types:
 ### Accessor pattern
 
 ```typescript
-const SERVICE_KEY = Symbol.for("@gotgenes/pi-subagents:service");
+const SERVICE_KEY = Symbol.for("@haoliplus/pi-subagents:service");
 
 export function publishSubagentsService(service: SubagentsService): void {
   (globalThis as Record<symbol, unknown>)[SERVICE_KEY] = service;
@@ -660,7 +660,7 @@ The observational surface then carries only fire-and-forget broadcasts of immuta
 These policy and environment concerns were removed so the core stays narrow; each now lives in a consumer or behind the workspace seam:
 
 - **Tool policy** (`disallowed_tools`) and **extension filtering** (`extensions: string[]`) — access control and tool visibility belong in pi-permission-system's `permission:` frontmatter (Phase 14, #237/#238).
-- **Worktree isolation** (`GitWorktreeManager`, the `isolation: "worktree"` mode) — one _strategy_ for choosing the child's cwd, evicted to `@gotgenes/pi-subagents-worktrees` (#263), the first consumer of the workspace provider seam.
+- **Worktree isolation** (`GitWorktreeManager`, the `isolation: "worktree"` mode) — one _strategy_ for choosing the child's cwd, evicted to `@haoliplus/pi-subagents-worktrees` (#263), the first consumer of the workspace provider seam.
 - **Per-agent extension lifecycle control** (`extensions: false`, `isolated`, `noSkills`) — removed in #264; deny-at-use covers what `isolated` pretended to do for tools.
   Prevent-load ships instead as the global/project `excludedExtensionPackages` setting (#696): a provider seam was declined because no _extension_ wants to supply the policy, which would make the seam a vacant hook.
 
@@ -756,7 +756,7 @@ Two consequences fell straight out, and both cut scope — both have since lande
 
 #### Sibling packages follow the same discipline
 
-`@gotgenes/pi-permission-system` is one of these hooks, and it is subject to the same scrutiny.
+`@haoliplus/pi-permission-system` is one of these hooks, and it is subject to the same scrutiny.
 Its boundaries deserve the same first-principles treatment: surface its conflated domains, distinguish what it observes from what it injects, and prefer being told over asking.
 The recursion principle means a consumer's internal design is not exempt because it lives in another package — the same axes (reactive versus discrete, hook versus broadcast, construct complete) apply across the seam.
 
@@ -784,7 +784,7 @@ That method — testability friction as a boundary probe, with its limits — is
 
 Recompute `Total LOC` with `find src -name '*.ts' | wc -l` and `cat $(find src -name '*.ts') | wc -l` — it counts `src/` only, so `fallow health`'s package-wide total is the wrong source.
 Every other row is a `fallow health` field.
-The values as of the last phase close are also committed as a machine-readable snapshot at `docs/fallow-snapshot.json`, written by `pnpm --silent fallow health --save-snapshot packages/pi-subagents/docs/fallow-snapshot.json --workspace @gotgenes/pi-subagents`; `fallow health --trend` reads it for per-metric deltas.
+The values as of the last phase close are also committed as a machine-readable snapshot at `docs/fallow-snapshot.json`, written by `pnpm --silent fallow health --save-snapshot packages/pi-subagents/docs/fallow-snapshot.json --workspace @haoliplus/pi-subagents`; `fallow health --trend` reads it for per-metric deltas.
 
 ### Dependency bag inventory
 
@@ -873,7 +873,7 @@ Each scattered item that sits in a file a step already edits is therefore named 
 
 | Metric                                                                                   | Baseline (2026-10-09) | Phase 23 target   | Recompute                                                                                                     |
 | ---------------------------------------------------------------------------------------- | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| Health score                                                                             | 78 (B)                | ≥ 78 (B)          | `pnpm fallow health --score --hotspots --targets --workspace @gotgenes/pi-subagents`                          |
+| Health score                                                                             | 78 (B)                | ≥ 78 (B)          | `pnpm fallow health --score --hotspots --targets --workspace @haoliplus/pi-subagents`                         |
 | `lifecycle/subagent.ts` lines                                                            | 833                   | ≤ 700 (estimated) | `wc -l packages/pi-subagents/src/lifecycle/subagent.ts`                                                       |
 | Run-kind-forked lifecycle names in `src/`                                                | 16                    | 0                 | fenced block below                                                                                            |
 | `resetForResume` occurrences in `src/`                                                   | 8                     | 0                 | fenced block below                                                                                            |
@@ -881,14 +881,14 @@ Each scattered item that sits in a file a step already edits is therefore named 
 | `_abortController` in `subagent.ts`                                                      | 5                     | 0                 | `grep -c '_abortController' packages/pi-subagents/src/lifecycle/subagent.ts`                                  |
 | `lifecycle/` files importing `observation/`                                              | 1                     | 0                 | `grep -rlE '#src/observation/' packages/pi-subagents/src/lifecycle`                                           |
 | `observation/` files importing `ui/`                                                     | 1                     | 0                 | `grep -rlE '#src/ui/' packages/pi-subagents/src/observation`                                                  |
-| Production duplication                                                                   | 13 lines (1 group)    | 0                 | `pnpm fallow dupes --workspace @gotgenes/pi-subagents`                                                        |
+| Production duplication                                                                   | 13 lines (1 group)    | 0                 | `pnpm fallow dupes --workspace @haoliplus/pi-subagents`                                                       |
 | `mock.calls[N]` reads in `test/lifecycle/subagent.test.ts`                               | 19                    | ≤ 7 (estimated)   | `grep -c 'mock\.calls\[' packages/pi-subagents/test/lifecycle/subagent.test.ts`                               |
 | Pre-0.86 renderer mentions in `session/prompts.ts`                                       | 7                     | 0                 | `grep -c '0\.85' packages/pi-subagents/src/session/prompts.ts`                                                |
 | `result.content[0]` reads in `test/tools/`                                               | 102                   | 0                 | fenced block below                                                                                            |
 | `as any` in `test/lifecycle/subagent-manager.test.ts`                                    | 8                     | 0                 | `grep -c 'as any' packages/pi-subagents/test/lifecycle/subagent-manager.test.ts`                              |
 | Hand-written `description: record.description` payloads in `subagent-events-observer.ts` | 5                     | at most 1         | `grep -c 'description: record.description' packages/pi-subagents/src/observation/subagent-events-observer.ts` |
 | Test files defining a local `AgentConfig` factory                                        | 4                     | 0                 | `grep -rlE '^function \w+\(overrides: Partial<AgentConfig>' packages/pi-subagents/test`                       |
-| Dead code                                                                                | 0                     | 0                 | `pnpm fallow dead-code --workspace @gotgenes/pi-subagents`                                                    |
+| Dead code                                                                                | 0                     | 0                 | `pnpm fallow dead-code --workspace @haoliplus/pi-subagents`                                                   |
 
 The three counts that need a pipeline live here rather than in the table:
 
@@ -1212,7 +1212,7 @@ Of the tracks recorded under Phase 21's deferred-work dispositions, [#482], [#60
 
 ## Relationship with upstream
 
-This fork (`@gotgenes/pi-subagents` in the [gotgenes/pi-packages] monorepo) is a hard fork of [tintinweb/pi-subagents].
+This fork (`@haoliplus/pi-subagents` in the [gotgenes/pi-packages] monorepo) is a hard fork of [tintinweb/pi-subagents].
 The decomposition diverges materially from upstream's direction.
 
 The three upstream PRs (#71, #72, #73) remain open.
@@ -1223,7 +1223,7 @@ Upstream fixes and ideas are cherry-picked when they align with this fork's scop
 The upstream test suite is run periodically as a regression canary for the session assembly core.
 
 [earendil-works/pi#4207]: https://github.com/earendil-works/pi/issues/4207
-[gotgenes/pi-packages]: https://github.com/gotgenes/pi-packages
+[gotgenes/pi-packages]: https://github.com/haoliplus/pi-packages
 [tintinweb/pi-subagents]: https://github.com/tintinweb/pi-subagents
 [#441]: https://github.com/gotgenes/pi-packages/issues/441
 [#442]: https://github.com/gotgenes/pi-packages/issues/442

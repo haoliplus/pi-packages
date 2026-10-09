@@ -26,6 +26,8 @@ concurrency:
 
 jobs:
   prepare:
+    # This fork is installed from source; publication needs an explicit opt-in.
+    if: vars.ENABLE_PACKAGE_RELEASES == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

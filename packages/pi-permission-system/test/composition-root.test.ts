@@ -61,13 +61,13 @@ import { makePromptOptions } from "#test/helpers/handler-fixtures";
 import { makeFakePi } from "#test/helpers/make-fake-pi";
 
 const SUBAGENT_REGISTRY_KEY = Symbol.for(
-  "@gotgenes/pi-permission-system:subagent-registry",
+  "@haoliplus/pi-permission-system:subagent-registry",
 );
 const SERVING_REGISTRY_KEY = Symbol.for(
-  "@gotgenes/pi-permission-system:serving-registry",
+  "@haoliplus/pi-permission-system:serving-registry",
 );
 const SESSION_SERVICES_KEY = Symbol.for(
-  "@gotgenes/pi-permission-system:session-services",
+  "@haoliplus/pi-permission-system:session-services",
 );
 
 /** The six events the factory must register a handler for. */

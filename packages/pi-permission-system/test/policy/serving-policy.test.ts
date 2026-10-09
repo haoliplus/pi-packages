@@ -197,6 +197,25 @@ describe("ResolverServingPolicy honors the floor the child raised", () => {
     expect(result.source).toBe("session");
   });
 
+  test("keeps a containment floor asking despite an older serving-session grant", () => {
+    const sessionRules = new SessionRules();
+    sessionRules.recordSessionApproval(
+      SessionApproval.single("external_directory_read", "/allowed/*"),
+    );
+    const result = servingPolicyOver(
+      { "*": "allow" },
+      { sessionRules },
+    ).resolve(
+      makeForwardedAccessIntent({
+        surface: "external_directory_read",
+        matchValues: ["/allowed/link/secret"],
+        boundaryValue: "/outside/secret",
+        floor: "<external-containment>",
+      }),
+    );
+    expect(result.state).toBe("ask");
+  });
+
   test("approves under the serving node's yolo, naming the floor and yolo", () => {
     const result = servingPolicyOver({ "*": "allow" }, { yolo: true }).resolve(
       flooredIntent,

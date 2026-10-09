@@ -387,7 +387,7 @@ describe("buildPermissionsJsonSchema", () => {
 
   it("sets the root $id to the monorepo raw URL", () => {
     expect(schema.$id).toBe(PERMISSIONS_SCHEMA_URL);
-    expect(schema.$id).toContain("gotgenes/pi-packages");
+    expect(schema.$id).toContain("haoliplus/pi-packages");
   });
 
   it("forbids additional top-level properties", () => {

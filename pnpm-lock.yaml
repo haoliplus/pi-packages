@@ -177,9 +177,9 @@ importers:
       '@earendil-works/pi-coding-agent':
         specifier: 0.84.4
         version: 0.84.4(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3)
-      '@gotgenes/pi-permission-system':
-        specifier: 27.0.0
-        version: 27.0.0(@earendil-works/pi-coding-agent@0.84.4(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3))(@earendil-works/pi-tui@1.0.0)
+      '@haoliplus/pi-permission-system':
+        specifier: workspace:*
+        version: link:../pi-permission-system
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
@@ -301,9 +301,9 @@ importers:
       '@earendil-works/pi-coding-agent':
         specifier: 0.79.1
         version: 0.79.1(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3)
-      '@gotgenes/pi-subagents':
-        specifier: ^16.4.0
-        version: 16.4.0(@earendil-works/pi-ai@1.0.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@8.10.2)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.79.1(supports-color@7.2.0)(zod@4.4.3))(@earendil-works/pi-tui@0.79.1)
+      '@haoliplus/pi-subagents':
+        specifier: workspace:*
+        version: link:../pi-subagents
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
@@ -986,21 +986,6 @@ packages:
       '@modelcontextprotocol/sdk':
         optional: true
 
-  '@gotgenes/pi-permission-system@27.0.0':
-    resolution: {integrity: sha512-5WpP2z0Ohxipi2Myfg4ArchXgtMX15HbJl7b2YMK3iB2sRIm57hDXt86e0zsVX+sGOVrDLCkKtLoqMkrPS1rwQ==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@earendil-works/pi-coding-agent': '>=0.79.0'
-      '@earendil-works/pi-tui': '>=0.79.0'
-
-  '@gotgenes/pi-subagents@16.4.0':
-    resolution: {integrity: sha512-lPNaWTLWI6S6OE8OBCYOnEF2KrdBmznwuGlXMPvkDvA2wRrg+B9aOUMbfq/F6AQo94dBoDuTLN5VfoXANx76eA==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@earendil-works/pi-ai': '>=0.75.0'
-      '@earendil-works/pi-coding-agent': '>=0.75.0'
-      '@earendil-works/pi-tui': '>=0.75.0'
-
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -1449,9 +1434,6 @@ packages:
 
   '@silvia-odwyer/photon-node@0.3.4':
     resolution: {integrity: sha512-bnly4BKB3KDTFxrUIcgCLbaeVVS8lrAkri1pEzskpmxu9MdfGQTy8b8EgcD83ywD3RPMsIulY8xJH5Awa+t9fA==}
-
-  '@sinclair/typebox@0.34.49':
-    resolution: {integrity: sha512-brySQQs7Jtn0joV8Xh9ZV/hZb9Ozb0pmazDIASBkYKCjXrXU3mpcFahmK/z4YDhGkQvP9mWJbVyahdtU5wQA+A==}
 
   '@smithy/core@3.24.3':
     resolution: {integrity: sha512-Ep/7tPamGY8mgESE3LyLKtxJyy6U52WWAqr/3wial47Sj4u3PiIF73AOGI27UyLy9duTkhZbgzodOfLV4TduZg==}
@@ -3753,23 +3735,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@gotgenes/pi-permission-system@27.0.0(@earendil-works/pi-coding-agent@0.84.4(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3))(@earendil-works/pi-tui@1.0.0)':
-    dependencies:
-      '@earendil-works/pi-coding-agent': 0.84.4(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3)
-      '@earendil-works/pi-tui': 1.0.0
-      tree-sitter-bash: 0.25.1
-      web-tree-sitter: 0.26.9
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - tree-sitter
-
-  '@gotgenes/pi-subagents@16.4.0(@earendil-works/pi-ai@1.0.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@8.10.2)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.79.1(supports-color@7.2.0)(zod@4.4.3))(@earendil-works/pi-tui@0.79.1)':
-    dependencies:
-      '@earendil-works/pi-ai': 1.0.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@8.10.2)(zod@4.4.3)
-      '@earendil-works/pi-coding-agent': 0.79.1(supports-color@7.2.0)(ws@8.20.1)(zod@4.4.3)
-      '@earendil-works/pi-tui': 0.79.1
-      '@sinclair/typebox': 0.34.49
-
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -4047,8 +4012,6 @@ snapshots:
     optional: true
 
   '@silvia-odwyer/photon-node@0.3.4': {}
-
-  '@sinclair/typebox@0.34.49': {}
 
   '@smithy/core@3.24.3':
     dependencies:

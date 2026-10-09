@@ -1,6 +1,6 @@
 # Configuration
 
-`@gotgenes/pi-permission-model-judge` reads one config file per scope, following the standard `@gotgenes/pi-*` convention.
+`@haoliplus/pi-permission-model-judge` reads one config file per scope, following the standard `@haoliplus/pi-*` convention.
 
 - Global: `~/.pi/agent/extensions/pi-permission-model-judge/config.json` (respects `PI_CODING_AGENT_DIR`).
 - Project: `<cwd>/.pi/extensions/pi-permission-model-judge/config.json`.
@@ -11,7 +11,7 @@ Point your editor at the bundled [JSON Schema](../schemas/model-judge.schema.jso
 ## Two config files, one link name
 
 This extension owns only the *model mechanism*.
-The *chain policy* — whether the link runs at all, and its order — lives in `@gotgenes/pi-permission-system`.
+The *chain policy* — whether the link runs at all, and its order — lives in `@haoliplus/pi-permission-system`.
 The two files are joined only by the link name `model-judge`:
 
 ```jsonc

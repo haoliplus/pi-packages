@@ -1,4 +1,8 @@
-import { canonicalizePath } from "#src/path/canonicalize-path";
+import {
+  canonicalizePath,
+  tryCanonicalizePath,
+} from "#src/path/canonicalize-path";
+import { expandHomePath } from "#src/path/expand-home";
 import type { NativeToolTarget } from "#src/path/native-tool-target";
 import type { PathFlavor } from "#src/path/path-flavor";
 
@@ -39,6 +43,7 @@ export class AccessPath {
     private readonly matchAliases: readonly string[],
     private readonly canonical: string,
     private readonly rewritten = false,
+    private readonly flavor?: PathFlavor,
   ) {}
 
   /**
@@ -64,6 +69,41 @@ export class AccessPath {
    */
   boundaryValue(): string {
     return this.canonical;
+  }
+
+  /**
+   * Whether a matching external-directory grant contains the actual target.
+   * The fixed directory before a wildcard is the grant's boundary. Resolving
+   * that directory independently permits symlinked roots (such as /tmp) but
+   * does not authorize nested symlinks that escape them. Exact paths grant
+   * only their resolved target; unbounded wildcard patterns prove no root.
+   */
+  // PermissionResolver calls this through the AccessIntent.path field.
+  // fallow-ignore-next-line unused-class-member
+  isWithinExternalGrant(pattern: string): boolean {
+    // A deliberately universal grant has no directory boundary to escape.
+    if (pattern === "*") return true;
+    const flavor = this.flavor;
+    if (!flavor || !this.canonical) return false;
+    const expanded = expandHomePath(pattern);
+    if (!flavor.impl.isAbsolute(expanded)) return false;
+    const wildcard = expanded.search(/[?*]/);
+    const prefix = wildcard < 0 ? expanded : expanded.slice(0, wildcard);
+    const root =
+      wildcard < 0
+        ? prefix
+        : prefix.slice(0, flavor.lastSeparatorIndex(prefix) + 1);
+    if (!root) return false;
+    if (root === flavor.impl.parse(root).root && prefix !== root) return false;
+    const canonicalRoot = tryCanonicalizePath(root, flavor);
+    const canonicalTarget = tryCanonicalizePath(this.lexical, flavor);
+    if (!canonicalRoot || !canonicalTarget) return false;
+    return wildcard < 0
+      ? flavor.fold(canonicalTarget) === flavor.fold(canonicalRoot)
+      : flavor.isWithin(
+          flavor.fold(canonicalTarget),
+          flavor.fold(canonicalRoot),
+        );
   }
 
   /**
@@ -118,6 +158,8 @@ export class AccessPath {
       normalizePathForComparison(pathValue, resolveBase, flavor),
       getPathPolicyValues(pathValue, { cwd, resolveBase }, flavor),
       canonicalNormalizePathForComparison(pathValue, resolveBase, flavor),
+      false,
+      flavor,
     );
   }
 
@@ -150,6 +192,7 @@ export class AccessPath {
       [...new Set(aliases)],
       flavor.fold(canonicalizePath(lexical, flavor)),
       native.rewritten,
+      flavor,
     );
   }
 

@@ -97,10 +97,9 @@ export interface PermissionCheckResult {
    */
   floorExemption?: FloorExemption;
   /**
-   * The synthetic pattern of a floor that raised this ask on the bash chain —
-   * on the deciding unit, or on another asking unit of the same command. Only
-   * the child's parse knows it, so a forwarded ask carries it for the serving
-   * node to clamp its own `allow` with.
+   * The synthetic pattern of a floor raised by shell analysis or an external
+   * path boundary. A forwarded ask carries this fact so the serving node
+   * cannot discard uncertainty established where the tool will execute.
    */
   floor?: string;
   /**

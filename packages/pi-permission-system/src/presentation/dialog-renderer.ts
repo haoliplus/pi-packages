@@ -24,6 +24,31 @@ export function renderPromptDialog(
   budget: DialogBudget,
   paint: HighlightPaint = plainText,
 ): DialogView {
+  if (payload.requirements) {
+    const perRequirementBudget = {
+      ...budget,
+      maxRows: Math.max(
+        0,
+        Math.floor(
+          (budget.maxRows - 1 - payload.requirements.length) /
+            payload.requirements.length,
+        ),
+      ),
+    };
+    const views = payload.requirements.map((requirement) =>
+      renderPromptDialog(requirement, perRequirementBudget, paint),
+    );
+    return {
+      lines: [
+        "Approve all listed permissions for this tool call:",
+        ...views.flatMap((view, index) => [
+          `Permission ${index + 1}`,
+          ...view.lines,
+        ]),
+      ],
+      elided: views.some((view) => view.elided),
+    };
+  }
   const core = coreFacts(payload).map((fact) =>
     capField(fact, budget.fieldMaxWidth),
   );

@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-subagents",
+  "name": "@haoliplus/pi-subagents",
   "version": "23.4.0",
   "type": "module",
   "exports": {
@@ -31,12 +31,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-subagents"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-subagents#readme",
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-subagents#readme",
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
   "keywords": [
     "pi-package",
@@ -46,9 +46,6 @@
     "agent",
     "autonomous"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "peerDependencies": {
     "@earendil-works/pi-ai": ">=1.0.0",
     "@earendil-works/pi-coding-agent": ">=1.0.0",
@@ -85,6 +82,7 @@
     "extensions": [
       "./src/index.ts"
     ],
-    "image": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-subagents/docs/assets/demo.webp"
-  }
+    "image": "https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-subagents/docs/assets/demo.webp"
+  },
+  "private": true
 }

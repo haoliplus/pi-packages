@@ -33,6 +33,28 @@ export function proveCommandEffect(
   return CORE_READ_EFFECT;
 }
 
+/** A reader's invocation needs approval when its effect or operands are unknown. */
+export function readerNeedsApproval(
+  headWord: string,
+  argWords: readonly ArgWord[],
+): boolean {
+  if (!isBareCoreWord(headWord)) return false;
+  if (proveCommandEffect(headWord, argWords).source === "retracted")
+    return true;
+  // These words never interpret arguments as input files. Their nested shell
+  // executions are enumerated separately, so computed output is not a read.
+  const ignoresFiles = [
+    "echo",
+    "basename",
+    "dirname",
+    "pwd",
+    "true",
+    "false",
+    ":",
+  ].includes(headWord);
+  return !ignoresFiles && argWords.some(({ computed }) => computed);
+}
+
 /**
  * The pure-reader core: the command words that are read-only for any
  * arguments, in any implementation.
@@ -139,7 +161,8 @@ function coreAdmissions(): readonly CoreAdmission[] {
     },
     {
       words: ["diff"],
-      reason: "Writes nothing; `-D` emits merged output to stdout",
+      reason:
+        "Guarded: directory comparisons follow member symlinks even without -r; operand-sensitive proof is not available",
     },
     {
       words: ["ls", "stat", "pwd"],
@@ -240,6 +263,22 @@ function optionGuard(guard: RetractionGuard): ClaimWithdrawal {
  * over-retract there.
  */
 const RETRACTION_GUARDS: ReadonlyMap<string, ClaimWithdrawal> = new Map([
+  // Even a non-recursive comparison reads same-named files inside directory
+  // operands. Their symlink targets are absent from path projection, so no
+  // invocation is proven until the operands can be bounded individually.
+  ["diff", () => true],
+  [
+    "rg",
+    optionGuard({
+      longStems: new Set([
+        "--pre",
+        "--hostname-bin",
+        "--search-zip",
+        "--follow",
+      ]),
+      shortLetters: new Set(["z", "L"]),
+    }),
+  ],
   [
     "find",
     optionGuard({
@@ -253,21 +292,61 @@ const RETRACTION_GUARDS: ReadonlyMap<string, ClaimWithdrawal> = new Map([
         "-fprint0",
         "-fprintf",
         "-fls",
+        "-L",
+        "-H",
+        "-follow",
+        "-files0-from",
       ]),
     }),
   ],
   [
     "fd",
     optionGuard({
-      longStems: new Set(["--exec", "--exec-batch"]),
-      shortLetters: new Set(["x", "X"]),
+      longStems: new Set(["--exec", "--exec-batch", "--follow"]),
+      shortLetters: new Set(["x", "X", "L"]),
     }),
   ],
   [
     "sort",
     optionGuard({
-      longStems: new Set(["--output"]),
-      shortLetters: new Set(["o"]),
+      longStems: new Set([
+        "--output",
+        "--temporary-directory",
+        "--compress-program",
+        "--files0-from",
+      ]),
+      shortLetters: new Set(["o", "T"]),
+    }),
+  ],
+  ...["grep", "egrep", "fgrep"].map((word): [string, ClaimWithdrawal] => [
+    word,
+    optionGuard({
+      // BSD/GNU recursion and symlink defaults differ. Both recursive forms
+      // need approval until the traversed entries can be bounded statically.
+      longStems: new Set([
+        "--dereference-recursive",
+        "--recursive",
+        "--directories",
+      ]),
+      shortLetters: new Set(["r", "R", "d"]),
+    }),
+  ]),
+  [
+    "ls",
+    optionGuard({
+      longStems: new Set([
+        "--dereference",
+        "--dereference-command-line",
+        "--dereference-command-line-symlink-to-dir",
+      ]),
+      shortLetters: new Set(["L", "H"]),
+    }),
+  ],
+  [
+    "stat",
+    optionGuard({
+      longStems: new Set(["--dereference"]),
+      shortLetters: new Set(["L"]),
     }),
   ],
   ["sed", sedWithdrawsReadClaim],

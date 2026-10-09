@@ -85,8 +85,10 @@ describe("PURE_READER_CORE", () => {
 
 describe("proveCommandEffect", () => {
   describe("a core word", () => {
-    it.each(ROSTER)("proves a read for %s", (word) => {
-      expect(prove(word, MINIMAL_ARGUMENTS.get(word) ?? [])).toEqual(CORE_READ);
+    it.each(ROSTER)("uses the audited disposition for %s", (word) => {
+      expect(prove(word, MINIMAL_ARGUMENTS.get(word) ?? [])).toEqual(
+        word === "diff" ? RETRACTED : CORE_READ,
+      );
     });
 
     it("proves a read whatever its arguments are", () => {

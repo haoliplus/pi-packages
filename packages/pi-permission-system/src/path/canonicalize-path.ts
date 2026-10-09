@@ -16,6 +16,14 @@ export function canonicalizePath(
   absolutePath: string,
   flavor: PathFlavor,
 ): string {
+  return tryCanonicalizePath(absolutePath, flavor) ?? absolutePath;
+}
+
+/** Resolve existing ancestors without treating resolution errors as proof. */
+export function tryCanonicalizePath(
+  absolutePath: string,
+  flavor: PathFlavor,
+): string | undefined {
   if (!absolutePath) return absolutePath;
 
   const { impl } = flavor;
@@ -30,8 +38,8 @@ export function canonicalizePath(
       return tail.length === 0 ? real : impl.join(real, ...tail);
     } catch (error) {
       const code = (error as NodeJS.ErrnoException).code;
-      if (code !== "ENOENT" && code !== "ENOTDIR") return absolutePath;
+      if (code !== "ENOENT" && code !== "ENOTDIR") return undefined;
     }
   }
-  return absolutePath;
+  return undefined;
 }

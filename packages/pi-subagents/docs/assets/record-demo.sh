@@ -7,7 +7,7 @@
 #
 # PI_DEMO_ARGS carries extra pi flags, e.g. an auth extension the demo session
 # needs because the tape runs with --no-extensions:
-#   PI_DEMO_ARGS="-e ~/.pi/agent/npm/node_modules/@gotgenes/pi-anthropic-auth/src/index.ts" \
+#   PI_DEMO_ARGS="-e ~/.pi/agent/npm/node_modules/@haoliplus/pi-anthropic-auth/src/index.ts" \
 #     packages/pi-subagents/docs/assets/record-demo.sh
 #
 # The animation is built from vhs's lossless PNG frames rather than its GIF, so no

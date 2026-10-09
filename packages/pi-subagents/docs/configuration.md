@@ -1,6 +1,6 @@
 # Configuration
 
-`@gotgenes/pi-subagents` has two configuration surfaces: **agent definition files** that describe an agent type, and a **`subagents.json`** settings file that tunes the runtime.
+`@haoliplus/pi-subagents` has two configuration surfaces: **agent definition files** that describe an agent type, and a **`subagents.json`** settings file that tunes the runtime.
 Neither is required — every field has a default.
 
 For the tools, commands, events, and service API, see the [README](../README.md).
@@ -26,14 +26,14 @@ Its own preamble and tool guidelines come first, then your `AGENTS.md` or `CLAUD
 A child inherits only the **stable identity** layers: everything up to, but not including, the skills catalogue.
 The layers after it are resolved against one session, so Pi and the child's own extensions rebuild them for the child rather than the child borrowing the parent's:
 
-| Layer                        | Where a child's copy comes from                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Pi preamble                  | inherited from the parent, byte for byte                                                                     |
-| `<project_context>`          | inherited byte for byte, unless the child runs in its own directory — then resolved from that directory      |
-| `<tools>` / `<rules>`        | never inherited; stated by the child's own `@gotgenes/pi-permission-system` when installed, otherwise absent |
-| Skills catalogue             | rebuilt by Pi for the child's own directory and tool set                                                     |
-| `Current working directory:` | rebuilt by Pi for the child's own directory                                                                  |
-| Extension-appended blocks    | rebuilt by the child's own extensions                                                                        |
+| Layer                        | Where a child's copy comes from                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Pi preamble                  | inherited from the parent, byte for byte                                                                      |
+| `<project_context>`          | inherited byte for byte, unless the child runs in its own directory — then resolved from that directory       |
+| `<tools>` / `<rules>`        | never inherited; stated by the child's own `@haoliplus/pi-permission-system` when installed, otherwise absent |
+| Skills catalogue             | rebuilt by Pi for the child's own directory and tool set                                                      |
+| `Current working directory:` | rebuilt by Pi for the child's own directory                                                                   |
+| Extension-appended blocks    | rebuilt by the child's own extensions                                                                         |
 
 This matters most for a child that runs somewhere other than the parent — one given an isolated workspace by a `WorkspaceProvider`.
 Its skills resolve from its own workspace, and its working-directory claim names that workspace.
@@ -48,7 +48,7 @@ Inheriting the identity rather than the whole prompt also gives the child a lead
 How much that is worth depends on the host: a provider whose cache prefix covers the tool definitions ahead of the system prompt — Anthropic's does — reuses nothing for a child, because a child's tool set always differs from its parent's.
 
 Pi renders the `<tools>` and `<rules>` sections from one session's tool set, and writes neither for a child, so a child drops its parent's copies rather than presenting the parent's tools as its own.
-With `@gotgenes/pi-permission-system` installed, the child states its own after its working directory.
+With `@haoliplus/pi-permission-system` installed, the child states its own after its working directory.
 Without it, a child carries no tool list or guidelines in its prompt; its tool definitions still name exactly the tools it holds ([#901]).
 On Pi releases before 0.86, which render the tool surface as untagged `Available tools:` prose, the child inherits the parent's listing unchanged.
 
@@ -82,7 +82,7 @@ Project context files ride along, and must: the child's loader is built with con
 
 **Use `portable` only for a provider that re-homes the prompt into a harness supplying its own base.**
 It is not enforced, because Pi exposes no way to identify such a provider — but pointing it at an ordinary provider is worse than leaving the default.
-`@gotgenes/pi-anthropic-auth`, for instance, finds Pi's role line in order to shape the OAuth system prompt; a portable child has no such line, so shaping returns it unchanged and the child never receives the neutral role prompt that shaping would have substituted.
+`@haoliplus/pi-anthropic-auth`, for instance, finds Pi's role line in order to shape the OAuth system prompt; a portable child has no such line, so shaping returns it unchanged and the child never receives the neutral role prompt that shaping would have substituted.
 
 If the parent has no context files, custom prompt, or append prompt, a portable child falls back to a short generic base rather than to the full parent prompt — opting in never silently re-embeds the preamble it exists to avoid.
 
@@ -237,7 +237,7 @@ Omitting `tools` entirely gives the agent all seven built-ins and no extension t
 Two other settings interact with this list:
 
 - [`excludedExtensionPackages`](#excluding-package-extensions-from-children) stops an extension from loading in children at all, so naming one of its tools has no effect there.
-- When [`@gotgenes/pi-permission-system`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system) is installed, its `permission:` frontmatter narrows the set further, per turn.
+- When [`@haoliplus/pi-permission-system`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system) is installed, its `permission:` frontmatter narrows the set further, per turn.
   Use it to deny a tool; use `tools` to decide what the agent has in the first place.
 
 #### Codemode, `tool_search`, and MCP tools
@@ -360,7 +360,7 @@ The same is true of [`promptInheritance`](#portable-inheritance-opt-in): hand-ed
 
 #### Excluding a permission extension
 
-When [`@gotgenes/pi-permission-system`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-system) is installed, it rides into children harmlessly by construction, so exclusion is an optimization and never a correctness requirement.
+When [`@haoliplus/pi-permission-system`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system) is installed, it rides into children harmlessly by construction, so exclusion is an optimization and never a correctness requirement.
 Excluding an extension that only registers an authorizer chain link costs nothing but saves its load time: the node that adjudicates an ask still judges every descendant's request.
 
 One case used to weaken a child, and recent versions of that extension close it.
@@ -375,18 +375,18 @@ The condition needed both halves, so most exclusions could never hit it:
 
 If one package supplies both the tool and its extractor, excluding it removes both together and no gap opens.
 
-Since the version of `@gotgenes/pi-permission-system` that closed this, a child session that has no extractor of its own for a tool borrows one from the session that spawned it, so the split above no longer leaves a path ungated.
+Since the version of `@haoliplus/pi-permission-system` that closed this, a child session that has no extractor of its own for a tool borrows one from the session that spawned it, so the split above no longer leaves a path ungated.
 Preview formatters resolve the same way, so an approval prompt for such a tool still shows its registered preview rather than raw JSON.
 The borrowed declaration is recorded: the child's review-log entry carries `extractorSource: "inherited"`.
 Nothing is borrowed across a process boundary — children here run in the parent's process, which is what makes it possible.
 
 One thing exclusion still does **not** weaken, by design: an authorizer chain link is never borrowed from another session, because a link decides rather than describes.
 
-Excluding `@gotgenes/pi-permission-system` itself is a different matter: a child then loads no permission node at all, so nothing gates its tool calls, no `permission:` frontmatter applies, and no `ask` is forwarded.
-See [Subagent Integration](https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/subagent-integration.md#loading-asymmetry) for the full rule.
+Excluding `@haoliplus/pi-permission-system` itself is a different matter: a child then loads no permission node at all, so nothing gates its tool calls, no `permission:` frontmatter applies, and no `ask` is forwarded.
+See [Subagent Integration](https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/subagent-integration.md#loading-asymmetry) for the full rule.
 
 This one does not pass silently.
-This extension announces each child once its extensions have bound, and a recent `@gotgenes/pi-permission-system` uses that announcement to notice a child with no node of its own: it records the child in its permission review log and warns once per session that the child's tool calls are ungated.
+This extension announces each child once its extensions have bound, and a recent `@haoliplus/pi-permission-system` uses that announcement to notice a child with no node of its own: it records the child in its permission review log and warns once per session that the child's tool calls are ungated.
 The warning names this setting as the likeliest cause, because a failure to load that extension in the child leaves the same absence and the parent cannot tell the two apart.
 Remove the entry to restore gating in child sessions; keep it, knowing the children it spawns are unguarded.
 

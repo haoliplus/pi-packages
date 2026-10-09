@@ -51,7 +51,7 @@ The alternative was to cut the catalogue and footer out while keeping the extens
 It was rejected on both criteria.
 
 On accuracy, the inherited tail is the least defensible layer of the three.
-It was built for the parent's directory and the parent's extension set: `@gotgenes/pi-nocd`'s block names the parent's cwd — the [#640] defect itself — and a package excluded from children through `excludedExtensionPackages` ([#696]) still reaches them through the inherited copy, which is the exact opposite of what that setting asks for.
+It was built for the parent's directory and the parent's extension set: `@haoliplus/pi-nocd`'s block names the parent's cwd — the [#640] defect itself — and a package excluded from children through `excludedExtensionPackages` ([#696]) still reaches them through the inherited copy, which is the exact opposite of what that setting asks for.
 
 On cost, excision is strictly worse for the constituency [#180] exists to protect.
 Removing an interior span leaves the tail in the child but displaces it past the divergence point, moving it from cached to prefilled — measured at roughly 275 characters in [#640]'s environment.
@@ -88,7 +88,7 @@ Both anchors match whole lines, which keeps a footer naming a directory that mer
   The trade is accepted because the alternative is inheriting a block built for another directory and another extension set, which is wrong rather than merely absent.
 - The shared prefix a child holds with its parent is shorter by the three dropped regions.
   Nothing that remains in the child's prompt moved out of that prefix, so no additional tokens require processing.
-- `@gotgenes/pi-nocd` documents a rewrite path premised on subagents inheriting the prompt verbatim, which this decision ends.
+- `@haoliplus/pi-nocd` documents a rewrite path premised on subagents inheriting the prompt verbatim, which this decision ends.
   Tracked as [#846].
 - A consumer that recovers the inherited region by searching a child's prompt for the parent's *full* assembled prompt finds nothing, because truncation ends the containment it matches on.
   `pi-claude-bridge` does exactly this to project a child's prompt onto another harness, so a child on that provider forwards Pi's base prompt where the parent forwards only its portable parts.

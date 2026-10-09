@@ -77,9 +77,19 @@ function isAttachedValueOption(value: string): boolean {
  *
  * `>` covers `print >` and `>>`; `|` covers a pipe to or from a command and
  * gawk's `|&` coprocess; `system` covers `system()`; `@` covers gawk's
- * `@include`, `@load`, and indirect function calls.
+ * `@include`, `@load`, and indirect function calls. `getline` can read a
+ * computed filename hidden inside the program, outside path projection.
+ * `ARGV`/`ARGC` can replace the command line's input files in a BEGIN block.
  */
-const WRITE_CAPABLE_TEXT: readonly string[] = [">", "|", "system", "@"];
+const WRITE_CAPABLE_TEXT: readonly string[] = [
+  ">",
+  "|",
+  "system",
+  "@",
+  "getline",
+  "ARGV",
+  "ARGC",
+];
 
 function provesReadOnlyProgram(program: string): boolean {
   return !WRITE_CAPABLE_TEXT.some((text) => program.includes(text));

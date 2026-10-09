@@ -135,8 +135,8 @@ export function preResolvedCheckOf(
  * A `deny` is absorbing: wherever it sits in the pipeline's order, the call is
  * refused, so no other gate's answer — and no human's — can change the
  * outcome. That is what makes running it first an ordering change rather than
- * a semantic one, and it is why the same treatment is *not* extended to `ask`
- * (#915): two asking gates ask two different questions.
+ * a semantic one. Asking gates retain their separate facts even when `runAll`
+ * presents them together for one tool-call decision.
  *
  * A session-sourced `deny` counts too: {@link GateRunner.runDescriptor}'s
  * session fast path takes only a session `allow`, so any other session-sourced

@@ -103,6 +103,10 @@ export function describeBashExternalDirectoryGate(
   }));
 
   const surface = worstEntry.surface;
+  const requirements = uncoveredEntries.map((entry) => ({
+    ...accessFactsFromPath(entry.surface, entry.path),
+    ...(entry.check.floor === undefined ? {} : { floor: entry.check.floor }),
+  }));
   const payload = buildBashExternalDirectoryAskPayload({
     command,
     externalPaths: disclosures,
@@ -116,7 +120,28 @@ export function describeBashExternalDirectoryGate(
   return {
     surface,
     input: {},
-    payload,
+    payload:
+      uncoveredEntries.length < 2
+        ? payload
+        : {
+            ...payload,
+            requirements: uncoveredEntries.map((entry) =>
+              buildBashExternalDirectoryAskPayload({
+                command,
+                externalPaths: [
+                  {
+                    path: entry.path.value(),
+                    resolvedPath: entry.path.resolvedAlias(),
+                  },
+                ],
+                cwd: tcc.cwd,
+                agentName: tcc.agentName,
+                toolName: tcc.toolName,
+                matchedPattern: entry.check.floor ?? entry.check.matchedPattern,
+                surface: entry.surface,
+              }),
+            ),
+          },
     sessionApproval: SessionApproval.forGrants(
       uncoveredEntries.flatMap((entry) =>
         normalizer
@@ -130,7 +155,13 @@ export function describeBashExternalDirectoryGate(
       toolCallId: tcc.toolCallId,
       toolName: tcc.toolName,
       command,
-      accessIntent: accessFactsFromPath(surface, worstEntry.path),
+      accessIntent: {
+        ...accessFactsFromPath(surface, worstEntry.path),
+        ...(worstEntry.check.floor === undefined
+          ? {}
+          : { floor: worstEntry.check.floor }),
+      },
+      ...(requirements.length > 1 ? { requirements } : {}),
     },
     logContext: {
       source: "tool_call",

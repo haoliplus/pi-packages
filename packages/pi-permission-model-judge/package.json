@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-permission-model-judge",
+  "name": "@haoliplus/pi-permission-model-judge",
   "version": "3.0.0",
   "description": "Deny-first typo-path model judge — a pi-permission-system Authorizer chain link",
   "type": "module",
@@ -24,16 +24,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-permission-model-judge"
   },
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-permission-model-judge#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-model-judge#readme",
   "engines": {
     "node": ">=22"
   },
@@ -62,13 +59,13 @@
   "peerDependencies": {
     "@earendil-works/pi-ai": ">=0.84.3",
     "@earendil-works/pi-coding-agent": ">=0.84.3",
-    "@gotgenes/pi-permission-system": ">=27.0.0"
+    "@haoliplus/pi-permission-system": ">=27.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
     "@earendil-works/pi-ai": "0.84.4",
     "@earendil-works/pi-coding-agent": "0.84.4",
-    "@gotgenes/pi-permission-system": "27.0.0",
+    "@haoliplus/pi-permission-system": "workspace:*",
     "@types/node": "catalog:",
     "rumdl": "catalog:",
     "typescript": "catalog:",
@@ -76,5 +73,6 @@
   },
   "dependencies": {
     "zod": "^4.4.3"
-  }
+  },
+  "private": true
 }

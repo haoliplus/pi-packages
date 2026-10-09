@@ -115,11 +115,10 @@ export function describeExternalDirectoryGate(
     preCheck,
     payload,
     sessionApproval: SessionApproval.forPatterns(surface, patterns),
-    promptDetails: buildPathGatePromptDetails(
-      tcc,
-      externalDirectoryPath,
-      accessFactsFromPath(surface, accessPath),
-    ),
+    promptDetails: buildPathGatePromptDetails(tcc, externalDirectoryPath, {
+      ...accessFactsFromPath(surface, accessPath),
+      ...(preCheck.floor === undefined ? {} : { floor: preCheck.floor }),
+    }),
     logContext: buildPathGateLogContext(tcc, externalDirectoryPath, pathSource),
     decision: {
       surface,

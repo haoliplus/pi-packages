@@ -1014,9 +1014,40 @@ describe("PermissionManager with in-memory PolicyLoader", () => {
   });
 
   describe("session rule composition", () => {
-    it("session rule wins over config", () => {
+    it("keeps last-match-wins exceptions inside the composed config", () => {
       const manager = createInMemoryManager({
-        global: { permission: { "*": "deny" } },
+        global: {
+          permission: { bash: { "*": "deny", "git status": "allow" } },
+        },
+      });
+      const sessionRules: Ruleset = [sessionRule("bash", "git *")];
+      expect(
+        manager.check(
+          {
+            kind: "bash-command",
+            surface: "bash",
+            command: "git status",
+            spellings: [],
+          },
+          sessionRules,
+        ).state,
+      ).toBe("allow");
+      expect(
+        manager.check(
+          {
+            kind: "bash-command",
+            surface: "bash",
+            command: "git push",
+            spellings: [],
+          },
+          sessionRules,
+        ).state,
+      ).toBe("deny");
+    });
+
+    it("session rule answers a configured ask", () => {
+      const manager = createInMemoryManager({
+        global: { permission: { "*": "ask" } },
       });
       const sessionRules: Ruleset = [sessionRule("read", "*")];
       const result = checkTool(manager, "read", {}, undefined, sessionRules);
@@ -1247,7 +1278,7 @@ describe("checkPermission — per-tool path patterns", () => {
     }
   });
 
-  it("session rule for specific path overrides config deny", () => {
+  it("session rule for specific path cannot override config deny", () => {
     const { manager, cleanup } = createManagerWithConfig({
       read: { "*": "allow", "*.env": "deny" },
     });
@@ -1261,8 +1292,8 @@ describe("checkPermission — per-tool path patterns", () => {
         undefined,
         sessionRules,
       );
-      expect(result.state).toBe("allow");
-      expect(result.source).toBe("session");
+      expect(result.state).toBe("deny");
+      expect(result.origin).toBe("global");
     } finally {
       cleanup();
     }
@@ -1354,7 +1385,7 @@ describe("cross-cutting path surface", () => {
     }
   });
 
-  it("session approval on path surface overrides config deny", () => {
+  it("session approval on path surface cannot override config deny", () => {
     const { manager, cleanup } = createManagerWithConfig({
       path: { "*": "allow", "*.env": "deny" },
     });
@@ -1368,8 +1399,8 @@ describe("cross-cutting path surface", () => {
         undefined,
         sessionRules,
       );
-      expect(result.state).toBe("allow");
-      expect(result.source).toBe("session");
+      expect(result.state).toBe("deny");
+      expect(result.origin).toBe("global");
     } finally {
       cleanup();
     }
@@ -3052,7 +3083,7 @@ test("session rules for one surface do not affect checks on other surfaces", () 
   }
 });
 
-test("session rules override config deny for external_directory", () => {
+test("session rules cannot override config deny for external_directory", () => {
   const { manager, cleanup } = createManager({
     permission: { "*": "allow", external_directory: "deny" },
   });
@@ -3070,8 +3101,8 @@ test("session rules override config deny for external_directory", () => {
       undefined,
       sessionRules,
     );
-    expect(result.state).toBe("allow");
-    expect(result.source).toBe("session");
+    expect(result.state).toBe("deny");
+    expect(result.origin).toBe("global");
   } finally {
     cleanup();
   }
@@ -3380,9 +3411,9 @@ describe("checkPathPolicy", () => {
     }
   });
 
-  it("applies session rules over config", () => {
+  it("applies session rules over a configured ask", () => {
     const { manager, cleanup } = createManagerWithConfig({
-      path: { "*": "ask", "src/*": "deny" },
+      path: { "*": "ask", "src/*": "ask" },
     });
     try {
       const sessionRules: Ruleset = [sessionRule("path_read", "src/*")];
@@ -3493,7 +3524,7 @@ describe("check — tool intent", () => {
 
   it("applies session rules via the tool intent", () => {
     const { manager, cleanup } = createManagerWithConfig({
-      bash: { "*": "deny" },
+      bash: { "*": "ask" },
     });
     try {
       const sessionRules: Ruleset = [sessionRule("bash", "echo *")];
@@ -3595,7 +3626,7 @@ describe("check — path-values intent", () => {
 
   it("applies session rules via the path-values intent", () => {
     const { manager, cleanup } = createManagerWithConfig({
-      path: { "*": "ask", "src/*": "deny" },
+      path: { "*": "ask", "src/*": "ask" },
     });
     try {
       const sessionRules: Ruleset = [sessionRule("path_read", "src/*")];
@@ -3758,9 +3789,9 @@ describe("mcp surface — last-match-wins across candidates", () => {
   });
 
   describe("session grants", () => {
-    it("honors a session grant matching a later candidate than the config rule", () => {
+    it("honors a session grant matching a later candidate than a config ask", () => {
       const { manager, cleanup } = createManagerWithConfig(
-        { mcp: { exa_search: "deny" } },
+        { mcp: { exa_search: "ask" } },
         ["exa"],
       );
       try {
@@ -3894,7 +3925,7 @@ describe("a top-level mcp__ key keeps applying to the Pi MCP tool it names", () 
   const toolName = "mcp__danger_srv__wipe";
   const portNotice =
     'Top-level permission keys naming Pi MCP tools are applied as "mcp" rules: "mcp__danger_srv__wipe". ' +
-    'Move them under "mcp" — see https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md';
+    'Move them under "mcp" — see https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/migration/1001-pi-mcp-tools-on-mcp-surface.md';
 
   function withManager<T>(
     permission: Record<string, unknown>,

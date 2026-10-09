@@ -28,7 +28,7 @@ Latest:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/gotgenes/pi-autoformat/main/schemas/pi-autoformat.schema.json",
+  "$schema": "https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-autoformat/schemas/pi-autoformat.schema.json",
   "commandTimeoutMs": 10000,
   "formatters": {
     "biome": {

@@ -1,6 +1,10 @@
-# @gotgenes/pi-subagents
+# @haoliplus/pi-subagents
 
-[![npm version](https://img.shields.io/npm/v/@gotgenes/pi-subagents?style=flat&logo=npm&logoColor=white)](https://www.npmjs.com/package/@gotgenes/pi-subagents) [![CI](https://img.shields.io/github/actions/workflow/status/gotgenes/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/gotgenes/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
+This package is maintained in the [haoliplus fork](https://github.com/haoliplus/pi-packages) of [gotgenes/pi-packages](https://github.com/gotgenes/pi-packages).
+Thanks to the upstream authors and contributors; original MIT notices are retained.
+The `@haoliplus/*` workspace is private and installed from a local checkout after `pnpm install --frozen-lockfile` and `pnpm run build:types`; it is not published to npm.
+
+[![CI](https://img.shields.io/github/actions/workflow/status/haoliplus/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/haoliplus/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
 
 A [pi](https://pi.dev) extension that gives pi **a focused, in-process sub-agent core** — autonomous agents that run inside the same pi runtime (no spawned subprocesses), plus a typed API and lifecycle events other extensions build on.
 Spawn specialized agents that run in isolated sessions — each with its own tools, system prompt, model, and thinking level.
@@ -9,7 +13,7 @@ Run them in foreground or background, steer them mid-run, resume completed sessi
 > Originally forked from [`tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents) by [@tintinweb](https://github.com/tintinweb), now an independently maintained hard fork.
 > See [Comparison with upstream](./docs/comparison-with-upstream.md) for a feature-by-feature comparison and guidance on which to choose.
 
-![Six background Explore subagents run four at a time with two queued; completion notices arrive one by one, then /subagents:sessions opens a finished agent's transcript](https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-subagents/docs/assets/demo.webp)
+![Six background Explore subagents run four at a time with two queued; completion notices arrive one by one, then /subagents:sessions opens a finished agent's transcript](https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-subagents/docs/assets/demo.webp)
 
 ## Features
 
@@ -35,7 +39,7 @@ Run them in foreground or background, steer them mid-run, resume completed sessi
 ## Install
 
 ```bash
-pi install npm:@gotgenes/pi-subagents
+pi install /absolute/path/to/pi-packages/packages/pi-subagents
 ```
 
 Or load directly for development:
@@ -64,7 +68,7 @@ Background agents return an ID immediately and notify you on completion.
 
 The extension renders a persistent widget above the editor showing active background agents (foreground runs are rendered inline by the `subagent` tool's progress stream):
 
-![The agents widget: four running Explore agents, each with its model, turn count, tool uses, tokens and context use, and current activity, above a line reading 2 queued](https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-subagents/docs/assets/widget.png)
+![The agents widget: four running Explore agents, each with its model, turn count, tool uses, tokens and context use, and current activity, above a line reading 2 queued](https://raw.githubusercontent.com/haoliplus/pi-packages/main/packages/pi-subagents/docs/assets/widget.png)
 
 ```text
 ● Agents
@@ -280,7 +284,7 @@ Use `contextUsage.percent` (surfaced as `(NN%)` in the widget) for current conte
 ## Worktree Isolation
 
 Worktree isolation lives in a companion package, not this core.
-Install [`@gotgenes/pi-subagents-worktrees`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-subagents-worktrees) and list the agent types you want isolated in its `worktreeAgents` config — opted-in agents run in a temporary git worktree, and their changes are saved to a branch on completion.
+Install [`@haoliplus/pi-subagents-worktrees`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-subagents-worktrees) and list the agent types you want isolated in its `worktreeAgents` config — opted-in agents run in a temporary git worktree, and their changes are saved to a branch on completion.
 The earlier `isolation: "worktree"` spawn flag and `isolation:` frontmatter key were removed from the core.
 
 ## Removed: agent memory and skill preloading
@@ -292,7 +296,7 @@ Package-level extension opt-outs live in the [`excludedExtensionPackages`](./doc
 ## Migrating from `disallowed_tools`
 
 The `disallowed_tools` frontmatter field has been removed.
-Use [`@gotgenes/pi-permission-system`](https://github.com/gotgenes/pi-permission-system)'s `permission:` frontmatter instead — it provides richer semantics (allow/ask/deny vs. binary hide):
+Use [`@haoliplus/pi-permission-system`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system)'s `permission:` frontmatter instead — it provides richer semantics (allow/ask/deny vs. binary hide):
 
 ```yaml
 # Before (no longer supported)
@@ -305,7 +309,7 @@ permission:
 
 ## Permission System Integration
 
-When [`@gotgenes/pi-permission-system`](https://github.com/gotgenes/pi-permission-system) is installed, this extension integrates automatically:
+When [`@haoliplus/pi-permission-system`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system) is installed, this extension integrates automatically:
 
 - **Per-agent permission policies** — define `permission:` in agent YAML frontmatter to set allow/ask/deny rules per agent type.
   The permission system resolves the agent name from the `<active_agent>` tag in the child system prompt.
@@ -316,18 +320,18 @@ When [`@gotgenes/pi-permission-system`](https://github.com/gotgenes/pi-permissio
 - **Unguarded children are announced** — this extension also publishes `subagents:child:bound` once a child's extensions have bound; the permission system uses it to notice a child that loaded no permission node of its own — the case [`excludedExtensionPackages`](docs/configuration.md#excluding-package-extensions-from-children) can create — and warns rather than letting it run ungated in silence.
 
 No configuration is required.
-When `@gotgenes/pi-permission-system` is not installed, the lifecycle events have no subscriber — a harmless no-op.
+When `@haoliplus/pi-permission-system` is not installed, the lifecycle events have no subscriber — a harmless no-op.
 
 ## For Extension Authors
 
 This package exposes two public subpath exports for companion extensions to import from the published tarball.
 
-### `@gotgenes/pi-subagents` — cross-extension service contract
+### `@haoliplus/pi-subagents` — cross-extension service contract
 
 Access the subagent service from another extension at runtime:
 
 ```typescript
-const { getSubagentsService } = await import("@gotgenes/pi-subagents");
+const { getSubagentsService } = await import("@haoliplus/pi-subagents");
 const svc = getSubagentsService();
 svc?.spawn("Explore", "Check for stale TODOs");
 ```
@@ -404,12 +408,12 @@ Pass `claimOutcome: true` to declare that your extension is delivering it, which
 Pass `signal` to cancel the resumed turn loop.
 It is wired through the record's own lever, so it ends the resume exactly as `abort(id)` does — either cancel reaches the same run, and the record reads `stopped`.
 
-### `@gotgenes/pi-subagents/settings` — layered config loader
+### `@haoliplus/pi-subagents/settings` — layered config loader
 
 Extensions that store configuration in JSON files can use the shared layered loader, which reads a global file (`<agentDir>/<filename>`) and a project file (`<cwd>/.pi/<filename>`) and merges them — project wins on conflicts, missing files are silent, malformed files warn and fall back:
 
 ```typescript
-import { loadLayeredSettings, type LayeredSettingsSource } from "@gotgenes/pi-subagents/settings";
+import { loadLayeredSettings, type LayeredSettingsSource } from "@haoliplus/pi-subagents/settings";
 
 interface MyConfig { enabled?: boolean; limit?: number }
 
@@ -484,8 +488,8 @@ Anything attaching to the core either subscribes to a lifecycle event, or regist
 The [architecture doc](./docs/architecture/architecture.md#scope-and-non-goals) carries the full inventory, including the removed UI surfaces and the reasoning behind each.
 
 **Where adjacent requests belong.**
-Tool restriction and per-agent permission policy → [@gotgenes/pi-permission-system](https://www.npmjs.com/package/@gotgenes/pi-permission-system).
-Worktree isolation → [@gotgenes/pi-subagents-worktrees](https://www.npmjs.com/package/@gotgenes/pi-subagents-worktrees).
+Tool restriction and per-agent permission policy → [@haoliplus/pi-permission-system](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system).
+Worktree isolation → [@haoliplus/pi-subagents-worktrees](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-subagents-worktrees).
 Timed dispatch, telemetry, and alternate UIs → a consumer over the lifecycle events and the typed service.
 A batteries-included alternative → upstream [`tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents).
 

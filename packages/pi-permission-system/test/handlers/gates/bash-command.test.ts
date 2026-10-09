@@ -940,7 +940,8 @@ describe("resolveBashCommandCheck: a rule written with an absolute path", () => 
         'cd "$DIR" && rm agent-builds/x',
       );
       expect(result.state).toBe("ask");
-      expect(result.matchedPattern).toBe("rm *");
+      expect(result.matchedPattern).toBe("<unproven-readonly-bash-command>");
+      expect(result.command).toBe('cd "$DIR"');
     });
 
     it("for an argument a variable computes", () => {
@@ -957,7 +958,8 @@ describe("resolveBashCommandCheck: a rule written with an absolute path", () => 
         { "*": "allow", [`cat ${cwd}/*`]: "deny" },
         "cat $(pwd)/x",
       );
-      expect(result.state).toBe("allow");
+      expect(result.state).toBe("ask");
+      expect(result.floor).toBe("<unproven-readonly-bash-command>");
     });
   });
 });

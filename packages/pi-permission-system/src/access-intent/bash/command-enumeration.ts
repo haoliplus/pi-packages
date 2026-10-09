@@ -1,4 +1,5 @@
 import type { BashCommandContext, FloorExemption } from "#src/types";
+import { PURE_READER_CORE, readerNeedsApproval } from "./command-effects";
 import {
   commandWordNodes,
   EXECUTION_HOST_TYPES,
@@ -8,7 +9,11 @@ import {
 import type { WordReader } from "./node-text";
 import { parseUnresolvedWithin } from "./parse-health";
 import type { TSNode } from "./parser";
-import { REDIRECT_NODE_TYPES, redirectMayWriteFile } from "./redirect-analysis";
+import {
+  REDIRECT_NODE_TYPES,
+  redirectMayWriteFile,
+  redirectTargetIndex,
+} from "./redirect-analysis";
 import {
   type CommandWord,
   classifyWrapperWords,
@@ -32,6 +37,12 @@ export type { WrapperKind } from "./wrapper-analysis";
  */
 export interface BashCommand {
   readonly text: string;
+  /**
+   * An invocation with unproven reader operands/effects, an environment
+   * prefix, or a computed redirect. The complete text scopes approval so
+   * arguments stripped from command-rule matching cannot silently disappear.
+   */
+  readonly unprovenRead?: string;
   /**
    * Execution context for a nested command (substitution or subshell); absent
    * for a current-shell (top-level) command.
@@ -123,6 +134,8 @@ interface UnitScope {
    * withholds the floor exemption from any wrapper unit beneath it.
    */
   readonly writesViaRedirect: boolean;
+  /** Complete statement whose redirect destination is computed at runtime. */
+  readonly unprovenRedirect?: string;
   /**
    * True when the enclosing statement holds a region tree-sitter could not
    * resolve, so every unit beneath it is floored rather than trusted (#840).
@@ -495,6 +508,7 @@ function unresolvedScope(node: TSNode, scope: UnitScope): UnitScope {
  * wrapper answers, and the other spellings its text has.
  */
 interface UnitFacts {
+  readonly unprovenRead?: string;
   readonly wrapperKind?: WrapperKind;
   readonly executedUnit?: string;
   readonly floorExemption?: FloorExemption;
@@ -507,6 +521,9 @@ function makeUnit(
   facts: UnitFacts = {},
 ): BashCommand {
   const { wrapperKind, executedUnit, floorExemption, spellings } = facts;
+  const unprovenRead = scope.parseUnresolved
+    ? undefined
+    : (scope.unprovenRedirect ?? facts.unprovenRead);
   const scoped: BashCommand = scope.context
     ? { text, context: scope.context }
     : { text };
@@ -521,7 +538,9 @@ function makeUnit(
   const salvaged: BashCommand = scope.salvaged
     ? { ...marked, salvaged: true }
     : marked;
-  return spellings === undefined ? salvaged : { ...salvaged, spellings };
+  const spelled =
+    spellings === undefined ? salvaged : { ...salvaged, spellings };
+  return unprovenRead === undefined ? spelled : { ...spelled, unprovenRead };
 }
 
 /**
@@ -539,16 +558,32 @@ function makeCommandUnit(
   floorExemption?: FloorExemption,
 ): BashCommand {
   const { text, words, argumentSpelling } = readCommandUnit(node, scope);
-  return makeUnit(text, scope, {
+  const redirected = redirectedScope(node, scope);
+  return makeUnit(text, redirected, {
+    unprovenRead: readerInvocationNeedsApproval(node, words)
+      ? node.text
+      : undefined,
     spellings: distinctSpellings(text, [
       scope.words.spellHomeAtStart(text),
       argumentSpelling,
     ]),
     wrapperKind: classifyWrapperWords(words),
     executedUnit: executedUnitOf(text, words) ?? undefined,
-    floorExemption:
-      floorExemption ?? floorExemptionOf(words, redirectedScope(node, scope)),
+    floorExemption: floorExemption ?? floorExemptionOf(words, redirected),
   });
+}
+
+/** Keep the capability proof on the command even when it has no path tokens. */
+function readerInvocationNeedsApproval(
+  node: TSNode,
+  words: readonly CommandWord[],
+): boolean {
+  const head = words.at(0);
+  for (let i = 0; i < node.childCount; i++) {
+    if (node.child(i)?.type === "variable_assignment") return true;
+  }
+  if (!head || !PURE_READER_CORE.has(head.value)) return false;
+  return readerNeedsApproval(head.value, words.slice(1));
 }
 
 /**
@@ -564,15 +599,22 @@ function makeCommandUnit(
  * redirect is a refusal rather than a proof.
  */
 function redirectedScope(node: TSNode, scope: UnitScope): UnitScope {
-  if (scope.writesViaRedirect) return scope;
+  let writesViaRedirect = scope.writesViaRedirect;
+  let unprovenRedirect = scope.unprovenRedirect;
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
     if (child?.type !== "file_redirect") continue;
-    if (redirectMayWriteFile(child)) {
-      return { ...scope, writesViaRedirect: true };
-    }
+    writesViaRedirect ||= redirectMayWriteFile(child);
+    const targetIndex = redirectTargetIndex(child);
+    const target = targetIndex === undefined ? null : child.child(targetIndex);
+    if (target && scope.words.argWord(target).computed)
+      unprovenRedirect ??= node.text;
   }
-  return scope;
+  return {
+    ...scope,
+    writesViaRedirect,
+    ...(unprovenRedirect === undefined ? {} : { unprovenRedirect }),
+  };
 }
 
 /**

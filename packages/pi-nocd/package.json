@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-nocd",
+  "name": "@haoliplus/pi-nocd",
   "version": "2.0.0",
   "description": "Pi extension that injects the resolved working directory into the system prompt so the agent never cd-prefixes the current working directory",
   "keywords": [
@@ -15,16 +15,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-nocd"
   },
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-nocd#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-nocd#readme",
   "engines": {
     "node": ">=22"
   },
@@ -55,5 +52,6 @@
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=1.0.0"
-  }
+  },
+  "private": true
 }

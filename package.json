@@ -1,14 +1,15 @@
 {
   "private": true,
-  "name": "@gotgenes/pi-packages",
+  "name": "@haoliplus/pi-packages",
   "type": "module",
-  "description": "Monorepo for @gotgenes pi packages",
+  "description": "Private Pi extensions maintained by haoliplus, forked from gotgenes/pi-packages",
   "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "prepare": "command -v prek >/dev/null 2>&1 && prek install || echo 'prek not found \u2014 skipping hook install (see README)'",
+    "build:types": "pnpm --filter @haoliplus/pi-permission-system --filter @haoliplus/pi-subagents run build:types",
+    "prepare": "command -v prek >/dev/null 2>&1 && prek install || echo 'prek not found — skipping hook install (see README)'",
     "check": "pnpm -r run check",
     "test": "pnpm -r run test && vitest run",
     "test:scripts": "vitest run",

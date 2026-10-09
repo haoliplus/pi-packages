@@ -10,7 +10,7 @@
  */
 
 import type { FloorExemption } from "#src/types";
-import { proveCommandEffect } from "./command-effects";
+import { proveCommandEffect, readerNeedsApproval } from "./command-effects";
 import type { ArgWord } from "./node-text";
 
 /**
@@ -189,6 +189,13 @@ export function floorExemptionOf(
   }
 
   const head = unwrapped.words.at(0)?.text ?? "";
+  if (
+    readerNeedsApproval(head, unwrapped.words.slice(1)) ||
+    unwrapped.peeled.some((layer) =>
+      layer.some((word) => isEnvironmentAssignment(word.text)),
+    )
+  )
+    return undefined;
   const provesRead =
     proveCommandEffect(head, unwrapped.words.slice(1)).effect === "read";
   if (provesRead && !statement.writesViaRedirect) return "core-reader";

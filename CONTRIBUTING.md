@@ -3,9 +3,13 @@
 Thanks for your interest in these packages.
 Contributions are welcome, and the path that reliably ships starts with an issue.
 
+This is the `haoliplus/pi-packages` fork of `gotgenes/pi-packages`.
+Direct fork-specific work here; retained upstream issue references remain links to their original discussions.
+While this fork's Issues feature is disabled, record approved work in `docs/plans/` or the owning package's `docs/plans/` and reference that plan in the change.
+
 ## Start with an issue
 
-File a [bug report or feature request](https://github.com/gotgenes/pi-packages/issues/new/choose) describing the problem, the use case behind it, and the pain it causes.
+File a [bug report or feature request](https://github.com/haoliplus/pi-packages/issues/new/choose) describing the problem, the use case behind it, and the pain it causes.
 Describing the problem matters more than proposing a solution, because the problem is what any design gets judged against.
 The templates ask for the package, the version, and a reproduction; filling those in fully is usually all that is needed.
 

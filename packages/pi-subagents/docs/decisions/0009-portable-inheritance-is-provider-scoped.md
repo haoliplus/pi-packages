@@ -36,7 +36,7 @@ Cutting further would not be a boundary any principle draws; it would be a block
 ### The benefit being traded away is real, and recently restored
 
 [#180] and [#400] placed the inherited region first so a child's leading bytes match its parent's, which prefix-reusing inference engines reuse instead of reprocessing — [#180]'s reporter measured 8,333 shared tokens at roughly 40 seconds on a local model.
-[#890] found `@gotgenes/pi-permission-system` had been rewriting that region in place and moved the tool surface out, restoring the shared prefix from 365 characters to about 57,000 in this repo's configuration.
+[#890] found `@haoliplus/pi-permission-system` had been rewriting that region in place and moved the tool surface out, restoring the shared prefix from 365 characters to about 57,000 in this repo's configuration.
 
 So a strategy that discards the region is correct for a re-homing host and a regression for a local-inference host.
 The two cannot share a default.
@@ -92,7 +92,7 @@ Opting into portable must never silently re-embed the harness base it exists to 
 
 - A child on a listed provider carries none of Pi's base preamble, so a host that re-homes its prompt sees only text that host's own harness would have produced.
 - `portable` is correct **only** where the host supplies its own base, and this is documented rather than enforced — Pi exposes no way to identify a re-homing provider.
-  Pointed at a provider that does not re-home, it is worse than `full`: `@gotgenes/pi-anthropic-auth` locates Pi's role line to shape the OAuth prompt and returns it unchanged when that line is absent, so such a child loses the neutral role prompt shaping would have substituted and gains nothing.
+  Pointed at a provider that does not re-home, it is worse than `full`: `@haoliplus/pi-anthropic-auth` locates Pi's role line to shape the OAuth prompt and returns it unchanged when that line is absent, so such a child loses the neutral role prompt shaping would have substituted and gains nothing.
 - The `full` path is unchanged, so [ADR 0008]'s guarantee and its pinning test are untouched.
 - A child that resolved no model resolves to `full`.
   This is defensive rather than reachable: Pi leaves the model unset only when no authenticated model exists at all, and such a parent cannot run a turn, emits no `before_agent_start`, and holds no capture to render.
@@ -118,5 +118,5 @@ The capability, the capture seam, and the fail-safe fallback are @georgeharker's
 [#904]: https://github.com/gotgenes/pi-packages/issues/904
 [ADR 0006]: 0006-inherited-prompt-is-identity-only.md
 [ADR 0008]: 0008-inherited-region-is-shared-parts.md
-[its ADR 0014]: https://github.com/gotgenes/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0014-tool-surface-is-node-local-prose.md
+[its ADR 0014]: https://github.com/haoliplus/pi-packages/blob/main/packages/pi-permission-system/docs/decisions/0014-tool-surface-is-node-local-prose.md
 [bridge#89]: https://github.com/elidickinson/pi-claude-bridge/pull/89

@@ -192,15 +192,21 @@ export type ForwardedPermissionRequest = {
    * omits it, and the serving dialog then offers no scope choice).
    */
   sessionApproval?: ForwardedSessionApproval;
+  /** Wire-only compound suggestion, invisible to a legacy single-ask server. */
+  compoundSessionApproval?: ForwardedSessionApproval;
   /**
    * The child-fixed access intent (ADR 0008 §2). Optional for version-skew
    * tolerance: an older child omits it, and the serving node floors to `ask`
    * (Step 3). Present on a current child's request for every gate surface.
    */
   accessIntent?: ForwardedAccessIntent;
+  /** Complete gate set for an atomic tool-call approval. Null means unknown. */
+  requirements?: readonly (ForwardedAccessIntent | null)[];
 };
 
 export type ForwardedPermissionResponse = {
+  /** Acknowledges evaluation of the complete compound request. */
+  requirementsEvaluated?: boolean;
   approved: boolean;
   state: PermissionDecisionState;
   denialReason?: string;

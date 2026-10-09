@@ -9,7 +9,13 @@
  * a bash command, and for an allow keyed on the symlink-resolved form too.
  */
 
-import { mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs";
+import {
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -44,6 +50,7 @@ function mkTemp(prefix: string): string {
 
 beforeEach(() => {
   realDir = mkTemp("ext-real-");
+  writeFileSync(join(realDir, "file.ts"), "export {};\n");
   const linkParent = mkTemp("ext-link-");
   linkDir = join(linkParent, "link");
   symlinkSync(realDir, linkDir);
@@ -77,6 +84,96 @@ function readTcc(): ToolCallContext {
 // ── tests ────────────────────────────────────────────────────────────────────
 
 describe("external_directory symlink acceptance (#418)", () => {
+  it.each(["read", "bash"])(
+    "asks when %s follows a nested symlink outside an allowed directory",
+    async (toolName) => {
+      const outside = mkTemp("ext-outside-");
+      writeFileSync(join(outside, "file.ts"), "outside\n");
+      symlinkSync(outside, join(realDir, "escape"));
+      const path = join(linkDir, "escape", "file.ts");
+      const { resolver, cleanup } = makeResolver({
+        permission: {
+          external_directory_read: { "*": "ask", [`${linkDir}/*`]: "allow" },
+        },
+      });
+      try {
+        const normalizer = new PathNormalizer(
+          pathFlavorForPlatform(process.platform),
+          cwd,
+        );
+        const command = `cat ${path}`;
+        const tcc: ToolCallContext = {
+          ...readTcc(),
+          toolName,
+          input: toolName === "read" ? { path } : { command },
+        };
+        const result =
+          toolName === "read"
+            ? describeExternalDirectoryGate(
+                tcc,
+                { dirs: [], excludedDirs: [] },
+                resolver,
+                normalizer,
+              )
+            : describeBashExternalDirectoryGate(
+                tcc,
+                await BashProgram.parse(command, normalizer),
+                resolver,
+                normalizer,
+              );
+        expect(isGateDescriptor(result)).toBe(true);
+        expect((result as GateDescriptor).preCheck?.state).toBe("ask");
+        expect(
+          (result as GateDescriptor).promptDetails.accessIntent?.floor,
+        ).toBe("<external-containment>");
+      } finally {
+        cleanup();
+      }
+    },
+  );
+
+  it("preserves a lexical deny even when its canonical target is inside an allowed root", () => {
+    const { resolver, cleanup } = makeResolver({
+      permission: {
+        external_directory_read: {
+          [`${realDir}/*`]: "allow",
+          [`${linkDir}/*`]: "deny",
+        },
+      },
+    });
+    try {
+      const result = describeExternalDirectoryGate(
+        readTcc(),
+        { dirs: [], excludedDirs: [] },
+        resolver,
+        new PathNormalizer(pathFlavorForPlatform(process.platform), cwd),
+      );
+      expect((result as GateDescriptor).preCheck?.state).toBe("deny");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("asks when symlink resolution fails instead of using lexical containment", () => {
+    symlinkSync("loop", join(realDir, "loop"));
+    const { resolver, cleanup } = makeResolver({
+      permission: {
+        external_directory_read: { [`${linkDir}/*`]: "allow" },
+      },
+    });
+    try {
+      const result = describeExternalDirectoryGate(
+        { ...readTcc(), input: { path: join(linkDir, "loop", "file.ts") } },
+        { dirs: [], excludedDirs: [] },
+        resolver,
+        new PathNormalizer(pathFlavorForPlatform(process.platform), cwd),
+      );
+      expect((result as GateDescriptor).preCheck?.state).toBe("ask");
+    } finally {
+      cleanup();
+    }
+  });
+
   it("allows a path-bearing tool when the allow is keyed on the typed (symlinked) path", () => {
     const { resolver, cleanup } = makeResolver({
       permission: {

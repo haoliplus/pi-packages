@@ -1,6 +1,10 @@
-# @gotgenes/pi-colgrep
+# @haoliplus/pi-colgrep
 
-[![npm version](https://img.shields.io/npm/v/@gotgenes/pi-colgrep?style=flat&logo=npm&logoColor=white)](https://www.npmjs.com/package/@gotgenes/pi-colgrep) [![CI](https://img.shields.io/github/actions/workflow/status/gotgenes/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/gotgenes/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
+This package is maintained in the [haoliplus fork](https://github.com/haoliplus/pi-packages) of [gotgenes/pi-packages](https://github.com/gotgenes/pi-packages).
+Thanks to the upstream authors and contributors; original MIT notices are retained.
+The `@haoliplus/*` workspace is private and installed from a local checkout after `pnpm install --frozen-lockfile` and `pnpm run build:types`; it is not published to npm.
+
+[![CI](https://img.shields.io/github/actions/workflow/status/haoliplus/pi-packages/ci.yml?style=flat&logo=github&label=CI)](https://github.com/haoliplus/pi-packages/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT) [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11-F69220?style=flat&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Pi Package](https://img.shields.io/badge/Pi-Package-6366F1?style=flat)](https://pi.mariozechner.at/)
 
 Pi extension that integrates [ColGrep](https://github.com/lightonai/next-plaid#colgrep) semantic code search as a tool available to the agent.
 
@@ -16,14 +20,14 @@ This package exposes ColGrep as a Pi tool that complements (not replaces) the bu
 ## Install
 
 ```bash
-pi install npm:@gotgenes/pi-colgrep
+pi install /absolute/path/to/pi-packages/packages/pi-colgrep
 ```
 
 Or add it to your Pi settings (`~/.pi/agent/settings.json`):
 
 ```json
 {
-  "packages": ["npm:@gotgenes/pi-colgrep"]
+  "packages": ["npm:@haoliplus/pi-colgrep"]
 }
 ```
 

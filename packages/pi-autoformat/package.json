@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-autoformat",
+  "name": "@haoliplus/pi-autoformat",
   "version": "5.1.11",
   "description": "Pi extension package for prompt-end auto-formatting",
   "imports": {
@@ -23,16 +23,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-autoformat"
   },
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-autoformat#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-autoformat#readme",
   "engines": {
     "node": ">=22"
   },
@@ -70,5 +67,6 @@
     "rumdl": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  }
+  },
+  "private": true
 }

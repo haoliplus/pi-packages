@@ -1,5 +1,5 @@
 {
-  "name": "@gotgenes/pi-session-tools",
+  "name": "@haoliplus/pi-session-tools",
   "version": "3.0.1",
   "description": "Pi extension providing session metadata tools (naming, context) for multi-session workflows",
   "keywords": [
@@ -15,16 +15,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotgenes/pi-packages.git",
+    "url": "git+https://github.com/haoliplus/pi-packages.git",
     "directory": "packages/pi-session-tools"
   },
   "bugs": {
-    "url": "https://github.com/gotgenes/pi-packages/issues"
+    "url": "https://github.com/haoliplus/pi-packages/issues"
   },
-  "homepage": "https://github.com/gotgenes/pi-packages/tree/main/packages/pi-session-tools#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "homepage": "https://github.com/haoliplus/pi-packages/tree/main/packages/pi-session-tools#readme",
   "engines": {
     "node": ">=22"
   },
@@ -59,5 +56,6 @@
     "@earendil-works/pi-ai": ">=0.75.0",
     "@earendil-works/pi-coding-agent": ">=0.75.0",
     "@earendil-works/pi-tui": ">=0.75.0"
-  }
+  },
+  "private": true
 }

@@ -20,7 +20,7 @@
 
 set -euo pipefail
 
-DEST_REPO="gotgenes/pi-packages"  # Change if different
+DEST_REPO="haoliplus/pi-packages"  # Change if different
 
 REPOS=(
   "gotgenes/pi-autoformat"

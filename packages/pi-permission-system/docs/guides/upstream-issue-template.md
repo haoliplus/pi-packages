@@ -14,7 +14,7 @@ Customize the placeholders (`{{...}}`) for each target repo.
 ````markdown
 ## Context
 
-Users of both `{{your-extension}}` and [`pi-permission-system`](https://github.com/gotgenes/pi-permission-system) currently configure tool restrictions in two places:
+Users of both `{{your-extension}}` and [`pi-permission-system`](https://github.com/haoliplus/pi-packages/tree/main/packages/pi-permission-system) currently configure tool restrictions in two places:
 
 1. **Tool visibility** via `{{your-key}}` in agent frontmatter (consumed by your extension)
 2. **Permission policy** via `permission:` in the same frontmatter (consumed by pi-permission-system)

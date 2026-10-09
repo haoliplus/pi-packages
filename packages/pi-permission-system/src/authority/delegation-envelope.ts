@@ -56,6 +56,8 @@ export function encloseInDelegationEnvelope(
  * excluded (more prompting, never less — ADR 0007 invariant 2).
  */
 function isExcludedSurface(details: PromptPermissionDetails): boolean {
+  // A link written for single-surface requests cannot approve a composite.
+  if (details.requirements) return true;
   const surface = details.accessIntent?.surface ?? details.surface ?? undefined;
   return (
     surface === undefined ||

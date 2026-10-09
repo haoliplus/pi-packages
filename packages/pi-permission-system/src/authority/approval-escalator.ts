@@ -90,6 +90,7 @@ interface ForwardedRequestFacts {
   sessionApproval?: ForwardedSessionApproval;
   /** The child-fixed access facts; the edge completes them into a `ForwardedAccessIntent`. */
   accessIntent?: ForwardedAccessFacts;
+  requirements?: readonly (ForwardedAccessFacts | undefined)[];
 }
 
 /** Constructor config for {@link ParentAuthorizer}. */
@@ -211,6 +212,7 @@ export class ParentAuthorizer implements TerminalAuthorizer {
       },
       sessionApproval: details.sessionApproval,
       accessIntent: details.accessIntent,
+      requirements: details.requirements,
     });
   }
 
@@ -315,16 +317,17 @@ export class ParentAuthorizer implements TerminalAuthorizer {
     // gate fixed the access facts; the edge stamps the requester identity it
     // alone knows (cwd + principal). The parent resolves against this intent
     // and never re-derives the match set (ADR 0008).
-    const accessIntent = facts.accessIntent
-      ? {
-          ...facts.accessIntent,
-          requesterCwd: getCwd(ctx),
-          principal: {
-            sessionId: requesterSessionId,
-            agentName: requesterAgentName,
-          },
-        }
-      : undefined;
+    const accessIntent =
+      !facts.requirements && facts.accessIntent
+        ? {
+            ...facts.accessIntent,
+            requesterCwd: getCwd(ctx),
+            principal: {
+              sessionId: requesterSessionId,
+              agentName: requesterAgentName,
+            },
+          }
+        : undefined;
     return {
       id: requestId,
       createdAt: Date.now(),
@@ -340,9 +343,27 @@ export class ParentAuthorizer implements TerminalAuthorizer {
           }
         : {}),
       ...(facts.sessionApproval
-        ? { sessionApproval: facts.sessionApproval }
+        ? facts.requirements
+          ? { compoundSessionApproval: facts.sessionApproval }
+          : { sessionApproval: facts.sessionApproval }
         : {}),
       ...(accessIntent ? { accessIntent } : {}),
+      ...(facts.requirements
+        ? {
+            requirements: facts.requirements.map((requirement) =>
+              requirement
+                ? {
+                    ...requirement,
+                    requesterCwd: getCwd(ctx),
+                    principal: {
+                      sessionId: requesterSessionId,
+                      agentName: requesterAgentName,
+                    },
+                  }
+                : null,
+            ),
+          }
+        : {}),
     };
   }
 
@@ -364,7 +385,11 @@ export class ParentAuthorizer implements TerminalAuthorizer {
           this.logger,
           responsePath,
         );
-        const relayed = response ? relayDecision(response) : null;
+        const relayed =
+          response &&
+          (!request.requirements || response.requirementsEvaluated === true)
+            ? relayDecision(response)
+            : null;
         this.logger.review("forwarded_permission.response_received", {
           requestId,
           approved: response?.approved ?? null,

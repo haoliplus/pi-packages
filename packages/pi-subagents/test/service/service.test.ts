@@ -7,7 +7,7 @@ import {
   unpublishSubagentsService,
 } from "#src/service/service";
 
-const SERVICE_KEY = Symbol.for("@gotgenes/pi-subagents:service");
+const SERVICE_KEY = Symbol.for("@haoliplus/pi-subagents:service");
 
 describe("SubagentsService accessors", () => {
   afterEach(() => {

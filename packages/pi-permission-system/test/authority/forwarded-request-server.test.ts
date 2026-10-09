@@ -123,6 +123,63 @@ async function escalateForwardedAsk(
 }
 
 describe("processInbox — recorded-authority resolution", () => {
+  test("checks all compound requirements and denies without a prompt", async () => {
+    temp = createForwardingTempDir("parent-session");
+    temp.writeRequest({
+      id: "compound-denied",
+      accessIntent: undefined,
+      requirements: [
+        makeForwardedAccessIntent({ surface: "bash" }),
+        makeForwardedAccessIntent({ surface: "external_directory_read" }),
+      ],
+    });
+    const escalator = makeCapturingEscalator();
+    const resolve = vi.fn((intent) =>
+      makeCheckResult({ state: intent.surface === "bash" ? "allow" : "deny" }),
+    );
+    const server = new ForwardedRequestServer(
+      makeServerDeps({
+        forwardingDir: temp.forwardingDir,
+        policy: { resolve },
+        escalator,
+      }),
+    );
+    await server.processInbox(
+      makeForwarderContext({ hasUI: true, sessionId: "parent-session" }),
+    );
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(escalator.escalate).not.toHaveBeenCalled();
+    expect(readResponse(temp, "compound-denied")).toMatchObject({
+      approved: false,
+      requirementsEvaluated: true,
+    });
+  });
+
+  test("forwards all floors in one compound prompt", async () => {
+    const requirements = [
+      makeForwardedAccessIntent({
+        surface: "bash",
+        floor: "<unproven-readonly-bash-command>",
+      }),
+      makeForwardedAccessIntent({
+        surface: "external_directory_read",
+        floor: "<external-containment>",
+      }),
+    ];
+    const details = await escalateForwardedAsk({
+      requirements,
+      accessIntent: undefined,
+    });
+    expect(details.requirements).toEqual(
+      requirements.map(
+        ({ requesterCwd: _cwd, principal: _principal, ...facts }) => facts,
+      ),
+    );
+    const link = encloseInDelegationEnvelope(async () => ({ kind: "allow" }));
+    expect(
+      await link(details, {} as PermissionQuery, makeAuthorizerLog()),
+    ).toEqual({ kind: "defer" });
+  });
   test("records the child's floor on the prompted entry of an ask it escalates", async () => {
     temp = createForwardingTempDir("parent-session");
     temp.writeRequest({

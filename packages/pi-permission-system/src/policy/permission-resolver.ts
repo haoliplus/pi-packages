@@ -97,12 +97,32 @@ export class PermissionResolver
     const resolved = toResolvedIntent(intent);
     const sessionRuleset = this.sessionRules.getRuleset();
     const members = surfaceFamilyMembers(resolved.surface);
+    const checkMember = (surface: string): PermissionCheckResult => {
+      const check = this.permissionManager.check(
+        { ...resolved, surface },
+        sessionRuleset,
+      );
+      if (
+        intent.kind === "access-path" &&
+        surface.startsWith("external_directory_") &&
+        check.state === "allow" &&
+        check.matchedPattern !== undefined &&
+        !intent.path.isWithinExternalGrant(check.matchedPattern)
+      ) {
+        return {
+          ...check,
+          state: "ask",
+          floor: "<external-containment>",
+          reason:
+            "The resolved target is not proven to remain inside the allowed directory.",
+        };
+      }
+      return check;
+    };
     if (members === null) {
-      return this.permissionManager.check(resolved, sessionRuleset);
+      return checkMember(resolved.surface);
     }
     const [first, ...rest] = members;
-    const checkMember = (surface: string): PermissionCheckResult =>
-      this.permissionManager.check({ ...resolved, surface }, sessionRuleset);
     return mostRestrictiveOf([
       checkMember(first),
       ...rest.map((surface) => checkMember(surface)),
