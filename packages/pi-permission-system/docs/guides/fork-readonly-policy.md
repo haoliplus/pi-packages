@@ -1,6 +1,10 @@
 # Read-only policy in this fork
 
 Start from [the read-only example](../../config/readonly.example.json), then add explicit directory entries to `permission.external_directory_read`.
+Save it as `~/.pi/agent/extensions/pi-permission-system/config.jsonc` for the global policy, or `.pi/extensions/pi-permission-system/config.jsonc` for the current project.
+JSONC accepts line and block comments, without trailing commas.
+An existing sibling `config.json` is used only when `config.jsonc` is absent; the two files are never merged.
+Archive old `pi-permissions.jsonc` files after migration, because those legacy locations are still loaded and reported separately.
 Keep `external_directory: { "*": "ask" }`; the current project is already within the boundary.
 A directory normally needs both its own path and a trailing `/*` entry if the agent lists the directory as well as its contents.
 Use absolute paths or `~/` paths, not a wildcard naming an entire home directory.

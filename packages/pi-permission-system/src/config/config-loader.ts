@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { normalize } from "node:path";
+import { dirname, normalize } from "node:path";
 import type { ZodError } from "zod";
 import { mergeFlatPermissions } from "#src/policy/permission-merge";
 import type { FlatPermissionConfig, PatternValue } from "#src/types";
@@ -304,7 +304,7 @@ export interface MergedConfigResult {
  *
  * Merge order:
  * 1. Legacy global policy (if present) — lowest precedence
- * 2. Legacy extension runtime config (if present and path differs from new global)
+ * 2. Legacy extension runtime config (if outside the global/project config directories)
  * 3. New global config
  * 4. Legacy project policy (if present)
  * 5. New project config — highest precedence
@@ -350,11 +350,11 @@ export function loadAndMergeConfigs(
     merged = mergeUnifiedConfigs(merged, legacy.config);
   }
 
-  // 2. Legacy extension runtime config (only if different from new global path)
-  const normalizedLegacyExt = normalize(legacyExtConfigPath);
-  const normalizedNewGlobal = normalize(newGlobalPath);
+  // 2. A sibling config.json is superseded by config.jsonc, not a legacy scope.
+  const legacyExtDir = dirname(normalize(legacyExtConfigPath));
   if (
-    normalizedLegacyExt !== normalizedNewGlobal &&
+    legacyExtDir !== dirname(normalize(newGlobalPath)) &&
+    legacyExtDir !== dirname(normalize(newProjectPath)) &&
     existsSync(legacyExtConfigPath)
   ) {
     const legacy = loadUnifiedConfig(legacyExtConfigPath);

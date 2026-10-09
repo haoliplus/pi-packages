@@ -285,6 +285,29 @@ describe("ConfigStore", () => {
   // ── save() ─────────────────────────────────────────────────────────────
 
   describe("save()", () => {
+    it.each([
+      { files: [], target: "config.jsonc" },
+      { files: ["config.json"], target: "config.json" },
+      { files: ["config.json", "config.jsonc"], target: "config.jsonc" },
+    ])(
+      "writes runtime settings to $target when $files exist",
+      ({ files, target }) => {
+        const configDir = "/test/agent/extensions/pi-permission-system";
+        mockExistsSync.mockImplementation((path) =>
+          files.some((file) => path === `${configDir}/${file}`),
+        );
+        const { store } = makeStore();
+        store.save({ ...DEFAULT_EXTENSION_CONFIG }, makeCommandCtx());
+        expect(mockLoadUnifiedConfig).toHaveBeenCalledWith(
+          `${configDir}/${target}`,
+        );
+        expect(mockRenameSync).toHaveBeenCalledWith(
+          `${configDir}/${target}.tmp`,
+          `${configDir}/${target}`,
+        );
+      },
+    );
+
     it("writes merged config to the global path", () => {
       const { store } = makeStore();
       mockLoadUnifiedConfig.mockReturnValue({

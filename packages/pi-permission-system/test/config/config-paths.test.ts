@@ -26,9 +26,9 @@ describe("config-paths", () => {
       );
     });
 
-    it("getGlobalConfigPath returns config.json under the global config dir", () => {
+    it("getGlobalConfigPath defaults to config.jsonc under the global config dir", () => {
       expect(getGlobalConfigPath(agentDir)).toBe(
-        join(agentDir, "extensions", "pi-permission-system", "config.json"),
+        join(agentDir, "extensions", "pi-permission-system", "config.jsonc"),
       );
     });
 
@@ -38,9 +38,9 @@ describe("config-paths", () => {
       );
     });
 
-    it("getProjectConfigPath returns .pi/extensions/pi-permission-system/config.json under cwd", () => {
+    it("getProjectConfigPath defaults to .pi/extensions/pi-permission-system/config.jsonc under cwd", () => {
       expect(getProjectConfigPath(cwd)).toBe(
-        join(cwd, ".pi", "extensions", "pi-permission-system", "config.json"),
+        join(cwd, ".pi", "extensions", "pi-permission-system", "config.jsonc"),
       );
     });
 

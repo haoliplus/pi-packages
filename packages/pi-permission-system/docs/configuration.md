@@ -4,10 +4,17 @@
 
 One unified config file per scope:
 
-| Scope   | Path                                                                                       |
-| ------- | ------------------------------------------------------------------------------------------ |
-| Global  | `~/.pi/agent/extensions/pi-permission-system/config.json` (respects `PI_CODING_AGENT_DIR`) |
-| Project | `<cwd>/.pi/extensions/pi-permission-system/config.json`                                    |
+| Scope   | Path                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------- |
+| Global  | `~/.pi/agent/extensions/pi-permission-system/config.jsonc` (respects `PI_CODING_AGENT_DIR`) |
+| Project | `<cwd>/.pi/extensions/pi-permission-system/config.jsonc`                                    |
+
+Each scope loads `config.jsonc` when present, otherwise an existing `config.json`.
+When both exist, only `config.jsonc` is loaded; the sibling `config.json` is neither merged nor used as a fallback if JSONC is invalid.
+New configurations created by the settings command use `config.jsonc`.
+Both filenames accept `//` and `/* ... */` comments, but trailing commas are rejected.
+Saving runtime settings through `/permission-system` rewrites the selected file as formatted JSON and removes comments.
+The old `pi-permissions.jsonc` locations retain their migration warnings and legacy loading behavior; archive those files after migrating their rules.
 
 Project config overrides global config; per-agent frontmatter overrides both.
 

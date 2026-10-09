@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const EXTENSION_ID = "pi-permission-system";
@@ -10,7 +11,7 @@ export function getGlobalConfigDir(agentDir: string): string {
 }
 
 export function getGlobalConfigPath(agentDir: string): string {
-  return join(getGlobalConfigDir(agentDir), "config.json");
+  return getConfigPath(getGlobalConfigDir(agentDir));
 }
 
 export function getGlobalLogsDir(agentDir: string): string {
@@ -18,7 +19,14 @@ export function getGlobalLogsDir(agentDir: string): string {
 }
 
 export function getProjectConfigPath(cwd: string): string {
-  return join(cwd, ".pi", "extensions", EXTENSION_ID, "config.json");
+  return getConfigPath(join(cwd, ".pi", "extensions", EXTENSION_ID));
+}
+
+function getConfigPath(configDir: string): string {
+  const jsoncPath = join(configDir, "config.jsonc");
+  if (existsSync(jsoncPath)) return jsoncPath;
+  const jsonPath = join(configDir, "config.json");
+  return existsSync(jsonPath) ? jsonPath : jsoncPath;
 }
 
 /**

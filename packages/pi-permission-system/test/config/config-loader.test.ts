@@ -836,6 +836,96 @@ describe("loadAndMergeConfigs", () => {
     });
   });
 
+  it("loads commented global and project config.jsonc files", () => {
+    const globalDir = join(agentDir, "extensions", "pi-permission-system");
+    const projectDir = join(cwd, ".pi", "extensions", "pi-permission-system");
+    mkdirSync(globalDir, { recursive: true });
+    mkdirSync(projectDir, { recursive: true });
+    writeFileSync(
+      join(globalDir, "config.jsonc"),
+      '{ // Global policy\n "permission": { "read": "allow" } }',
+    );
+    writeFileSync(
+      join(projectDir, "config.jsonc"),
+      '{ /* Project policy */ "permission": { "write": "deny" } }',
+    );
+
+    const result = loadAndMergeConfigs(agentDir, cwd, extensionRoot);
+    expect(result.issues).toEqual([]);
+    expect(result.global.permission).toEqual({ read: "allow" });
+    expect(result.project.permission).toEqual({ write: "deny" });
+    expect(result.merged.permission).toEqual({ read: "allow", write: "deny" });
+  });
+
+  it.each(["global", "project"])(
+    "prefers config.jsonc without merging sibling config.json when installed in the %s config directory",
+    (scope) => {
+      writeGlobal({ yoloMode: true, permission: { bash: "allow" } });
+      writeProject({ debugLog: true, permission: { write: "allow" } });
+      const globalDir = join(agentDir, "extensions", "pi-permission-system");
+      const projectDir = join(cwd, ".pi", "extensions", "pi-permission-system");
+      writeFileSync(
+        join(globalDir, "config.jsonc"),
+        JSON.stringify({ permission: { read: "allow" } }),
+      );
+      writeFileSync(
+        join(projectDir, "config.jsonc"),
+        JSON.stringify({ permission: { edit: "deny" } }),
+      );
+
+      // Installing the extension under its config directory must not turn the
+      // ignored sibling config.json into a legacy runtime config.
+      const result = loadAndMergeConfigs(
+        agentDir,
+        cwd,
+        scope === "global" ? globalDir : projectDir,
+      );
+      expect(result.issues).toEqual([]);
+      expect(result.merged).toEqual({
+        permission: { read: "allow", edit: "deny" },
+      });
+    },
+  );
+
+  it.each([false, true])(
+    "withholds project config when the extension is installed there (JSONC present: %s)",
+    (withJsonc) => {
+      writeGlobal({ permission: { read: "deny" } });
+      writeProject({ yoloMode: true, permission: { bash: "allow" } });
+      const projectDir = join(cwd, ".pi", "extensions", "pi-permission-system");
+      if (withJsonc) {
+        writeFileSync(
+          join(projectDir, "config.jsonc"),
+          JSON.stringify({ permission: { read: "allow" } }),
+        );
+      }
+
+      const result = loadAndMergeConfigs(agentDir, cwd, projectDir, {
+        includeProjectScope: false,
+      });
+      expect(result.issues).toEqual([]);
+      expect(result.project).toEqual({});
+      expect(result.merged).toEqual({ permission: { read: "deny" } });
+    },
+  );
+
+  it("reports invalid config.jsonc without falling back to config.json", () => {
+    writeGlobal({ yoloMode: true, permission: { bash: "allow" } });
+    const globalPath = join(
+      agentDir,
+      "extensions",
+      "pi-permission-system",
+      "config.jsonc",
+    );
+    writeFileSync(globalPath, '{ "permission": { "read": "allow", } }');
+
+    const result = loadAndMergeConfigs(agentDir, cwd, extensionRoot);
+    expect(result.global).toEqual({});
+    expect(result.merged).toEqual({});
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0]).toContain(globalPath);
+  });
+
   it("detects legacy global policy and emits migration issue", () => {
     writeLegacyGlobalPolicy({
       defaultPolicy: { tools: "allow" },
@@ -846,6 +936,9 @@ describe("loadAndMergeConfigs", () => {
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]).toContain("pi-permissions.jsonc");
     expect(result.issues[0]).toContain("extensions/pi-permission-system");
+    expect(result.issues[0]).toContain(
+      "extensions/pi-permission-system/config.jsonc",
+    );
     // Legacy file has no flat-format permission key — no rules extracted
     expect(result.merged.permission).toBeUndefined();
   });
@@ -859,6 +952,9 @@ describe("loadAndMergeConfigs", () => {
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]).toContain(".pi/agent/pi-permissions.jsonc");
     expect(result.issues[0]).toContain(".pi/extensions/pi-permission-system");
+    expect(result.issues[0]).toContain(
+      ".pi/extensions/pi-permission-system/config.jsonc",
+    );
     // Legacy file has no flat-format permission key — no rules extracted
     expect(result.merged.permission).toBeUndefined();
   });

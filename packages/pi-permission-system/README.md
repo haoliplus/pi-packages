@@ -35,7 +35,7 @@ pi install /absolute/path/to/pi-packages/packages/pi-permission-system
 
 For bounded read-only automation in this fork, use the [read-only policy guide](docs/guides/fork-readonly-policy.md) and its example instead of the permissive example below.
 
-1. Create the global config file at `~/.pi/agent/extensions/pi-permission-system/config.json`:
+1. Create the global config file at `~/.pi/agent/extensions/pi-permission-system/config.jsonc`:
 
     ```jsonc
     {
@@ -126,12 +126,17 @@ A token nothing proves still consults both directions, so an unrecognized comman
 
 ## Configuration
 
-Config lives in one JSON file per scope:
+Config lives in one JSONC or JSON file per scope:
 
-| Scope   | Path                                                      |
-| ------- | --------------------------------------------------------- |
-| Global  | `~/.pi/agent/extensions/pi-permission-system/config.json` |
-| Project | `<cwd>/.pi/extensions/pi-permission-system/config.json`   |
+| Scope   | Path                                                       |
+| ------- | ---------------------------------------------------------- |
+| Global  | `~/.pi/agent/extensions/pi-permission-system/config.jsonc` |
+| Project | `<cwd>/.pi/extensions/pi-permission-system/config.jsonc`   |
+
+An existing `config.json` remains supported when `config.jsonc` is absent.
+If both exist, only `config.jsonc` is loaded; their rules are not merged.
+Comments are supported, but trailing commas are not.
+New configurations use `config.jsonc`; saving through `/permission-system` writes formatted JSON and removes comments.
 
 Project overrides global; per-agent YAML frontmatter overrides both.
 Project config (policy and runtime knobs) is loaded only once the project is trusted — in an untrusted directory only global config applies, so an untrusted repository cannot loosen your global policy (see [Upgrading](#2200--project-config-requires-project-trust)).

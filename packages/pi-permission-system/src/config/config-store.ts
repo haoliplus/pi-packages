@@ -15,6 +15,7 @@ import {
   getLegacyExtensionConfigPath,
   getLegacyGlobalPolicyPath,
   getLegacyProjectPolicyPath,
+  getProjectConfigPath,
 } from "./config-paths";
 import { buildResolvedConfigLogEntry } from "./config-reporter";
 import {
@@ -216,8 +217,11 @@ export class ConfigStore
       : false;
     const legacyExtConfigPath = getLegacyExtensionConfigPath(EXTENSION_ROOT);
     const newGlobalPath = getGlobalConfigPath(agentDir);
+    const legacyExtDir = dirname(normalize(legacyExtConfigPath));
     const legacyExtensionConfigDetected =
-      normalize(legacyExtConfigPath) !== normalize(newGlobalPath) &&
+      legacyExtDir !== dirname(normalize(newGlobalPath)) &&
+      (!cwd ||
+        legacyExtDir !== dirname(normalize(getProjectConfigPath(cwd)))) &&
       existsSync(legacyExtConfigPath);
     const entry = buildResolvedConfigLogEntry({
       policyPaths,
