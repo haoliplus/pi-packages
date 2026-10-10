@@ -7,6 +7,7 @@ import {
 } from "#src/access-intent/path-normalization";
 import { classifyToolKind } from "#src/access-intent/tool-kind";
 import { deriveApprovalPatterns } from "./approval-pattern";
+import { expandFilenameGlob } from "./filename-glob";
 import { resolveNativeToolTarget } from "./native-tool-target";
 import { isPathOutsideWorkingDirectory } from "./path-containment";
 import type { PathFlavor } from "./path-flavor";
@@ -201,6 +202,15 @@ export class PathNormalizer {
   /** Resolve a `cd`-folded offset against the baked cwd (platform-aware). */
   resolveBase(offset: string): string {
     return this.flavor.impl.resolve(this.cwd, offset);
+  }
+
+  /** Resolve a bounded filename glob against the current shell directory. */
+  expandFilenameGlob(token: string, offset: string): readonly string[] | null {
+    return expandFilenameGlob(
+      token,
+      this.resolveBase(offset),
+      this.flavor.impl,
+    );
   }
 
   /** Join a `cd` offset with a relative target (platform-aware), for cd-folding. */

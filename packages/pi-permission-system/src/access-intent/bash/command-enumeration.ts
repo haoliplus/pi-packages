@@ -113,6 +113,8 @@ export interface BashCommand {
  */
 export interface ArgumentSpeller {
   absoluteSpellingOf(node: TSNode): string | undefined;
+  /** True only when all possible glob matches were projected to path gates. */
+  isExpandedGlob?(node: TSNode): boolean;
 }
 
 /**
@@ -663,7 +665,14 @@ function readCommandUnit(
       spelled += gap;
     }
     const argWord = scope.words.argWord(word);
-    words.push({ ...argWord, text: word.text, offset: text.length });
+    words.push({
+      ...argWord,
+      ...(scope.speller?.isExpandedGlob?.(word)
+        ? { expandedGlob: true as const }
+        : {}),
+      text: word.text,
+      offset: text.length,
+    });
     text += word.text;
     const spelling = argWord.computed
       ? undefined

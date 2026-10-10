@@ -8,6 +8,7 @@ import { normalizePathPolicyLiteral } from "#src/access-intent/path-normalizatio
 import type { PathNormalizer } from "#src/path/path-normalizer";
 import { isSafeSystemPath } from "#src/path/safe-system-paths";
 import type { ArgumentSpeller } from "./command-enumeration";
+import { supportsGlobSnapshot } from "./glob-snapshot-context";
 import { timedSubshellOf } from "./nested-execution";
 import {
   ARG_NODE_TYPES,
@@ -182,9 +183,39 @@ export class BashPathResolver {
       this.walkForCandidates(salvaged, UNKNOWN_BASE, fragment);
       collected.push(...fragment.map(withoutSpan));
     }
-    const candidates = collected.filter(
+    const literalCandidates = collected.filter(
       ({ token }) => !this.words.spellsReboundHome(token),
     );
+    const expandedSpans = new Set<string>();
+    const stableSnapshot =
+      literalCandidates.some(({ token }) => token.includes("*")) &&
+      supportsGlobSnapshot(rootNode, this.words);
+    const candidates = literalCandidates.flatMap((candidate) => {
+      const { token, span, base, effect, role } = candidate;
+      if (
+        !stableSnapshot ||
+        !span ||
+        base.kind !== "known" ||
+        effect.effect !== "read" ||
+        role !== "operand"
+      )
+        return [candidate];
+      // Quotes, escapes and expansions must never be interpreted as globs.
+      if (
+        rootNode.text.slice(
+          span.start - rootNode.startIndex,
+          span.end - rootNode.startIndex,
+        ) !== token
+      )
+        return [candidate];
+      const matches = this.normalizer.expandFilenameGlob(token, base.offset);
+      if (!matches) return [candidate];
+      expandedSpans.add(spanKey(span));
+      return [
+        candidate,
+        ...matches.map((match) => ({ token: match, base, effect, role })),
+      ];
+    });
     const { ruleCandidates, argumentSpellings } =
       this.projectRuleCandidates(candidates);
     return {
@@ -192,7 +223,14 @@ export class BashPathResolver {
         this.projectExternalPaths(candidates),
       ),
       ruleCandidates,
-      argumentSpellings,
+      argumentSpellings: {
+        absoluteSpellingOf: (node) =>
+          argumentSpellings.absoluteSpellingOf(node),
+        isExpandedGlob: (node) =>
+          expandedSpans.has(
+            spanKey({ start: node.startIndex, end: node.endIndex }),
+          ),
+      },
     };
   }
 

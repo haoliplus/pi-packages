@@ -52,7 +52,13 @@ export function readerNeedsApproval(
     "false",
     ":",
   ].includes(headWord);
-  return !ignoresFiles && argWords.some(({ computed }) => computed);
+  return (
+    !ignoresFiles &&
+    argWords.some(
+      ({ computed, expandedGlob }) =>
+        computed && !(headWord === "wc" && expandedGlob),
+    )
+  );
 }
 
 /**
@@ -267,6 +273,8 @@ const RETRACTION_GUARDS: ReadonlyMap<string, ClaimWithdrawal> = new Map([
   // operands. Their symlink targets are absent from path projection, so no
   // invocation is proven until the operands can be bounded individually.
   ["diff", () => true],
+  // GNU wc can read additional paths from a file or stdin instead of argv.
+  ["wc", optionGuard({ longStems: new Set(["--files0-from"]) })],
   [
     "rg",
     optionGuard({

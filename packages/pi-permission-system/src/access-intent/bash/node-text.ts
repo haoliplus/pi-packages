@@ -44,6 +44,8 @@ export interface ArgWord {
    * expansion, an ANSI-C string — which {@link resolveText} passes through as written.
    */
   readonly computed: boolean;
+  /** A filename glob whose possible matches all reached the path gates. */
+  readonly expandedGlob?: true;
   /**
    * Whether the program may receive this argument, or a word split from it,
    * beginning with `-` — the shape every option has. Exact for a word that is
